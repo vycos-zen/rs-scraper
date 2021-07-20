@@ -1,4 +1,4 @@
-import "./App.css";
+import "./App.scss";
 import { RsScrapePageInput } from "./component/RsScrapePageInput";
 
 function App() {
