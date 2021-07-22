@@ -1,21 +1,23 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { Container, ListGroup } from "react-bootstrap";
 
 export function RsScrapeResults({ props }) {
-  const [displayedResults, setDisplayedResults] = useState([]);
 
-  useEffect(() => {
-    if (props && props.results) {
-      setDisplayedResults(props.results);
-      console.log(displayedResults);
-    }
-  }, []);
+  const listItem = (scrapeResult) => (
+    <ListGroup.Item
+      key={`${scrapeResult.pageNumber}${scrapeResult.indexOnPage}`}
+    >
+      <span>
+        Article: {scrapeResult.pageNumber}/{scrapeResult.indexOnPage} Link:{" "}
+        {scrapeResult.articleLink}
+      </span>
+    </ListGroup.Item>
+  );
 
-  const listItem = (textValue) => <ListGroup.Item>{textValue}</ListGroup.Item>;
   return (
     <Container>
       <ListGroup>
-        {displayedResults.map((item) => listItem(item))}
+        {props.scrapeResults.map((scrapeResult) => listItem(scrapeResult))}
       </ListGroup>
     </Container>
   );
