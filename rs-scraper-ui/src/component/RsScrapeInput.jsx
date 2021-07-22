@@ -58,7 +58,7 @@ export function RsScrapeInput({ props }) {
       <Form noValidate validated={wasValidated}>
         <Form.Group className="mb-3" controlId="validation01">
           <Form.Label>
-            Please sepcify the number of pages to scrape from 1-
+            Please specify the number of pages to scrape from 1-
             {maxPageCount}:
           </Form.Label>
           <Form.Control

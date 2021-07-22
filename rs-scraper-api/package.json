@@ -1,0 +1,12 @@
+{
+  "name": "rs-scraper-api",
+  "version": "1.0.0",
+  "description": "serve rs-scraper-ui",
+  "main": "index.js",
+  "scripts": {
+    "start": "node .",
+    "test": "test"
+  },
+  "author": "peterkollerlv",
+  "license": "ISC"
+}
