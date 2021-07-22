@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Button, Container, Form } from "react-bootstrap";
 
 export function RsScrapeInput({ props }) {
-  const [numberOfPagesInQuery, setNumberOfPagesInQuery] = useState(0);
+  const [numberOfPagesToQuery, setNumberOfPagesToQuery] = useState(0);
 
   const [maxPageCount, setMaxPageCount] = useState(0);
 
@@ -10,56 +10,88 @@ export function RsScrapeInput({ props }) {
 
   const [wasValidated, setWasValidated] = useState(false);
 
+  const numberOfPagesRef = useRef();
+
+  const scrapeButtonRef = useRef();
+
+  const clearButtonRef = useRef();
+
   useEffect(() => {
     const getMaxPageCount = () => {
       return 5;
     };
     setMaxPageCount(getMaxPageCount());
-    console.log(`setting page count to ${getMaxPageCount()}`);
-  }, []);
+  }, [maxPageCount]);
 
-  const validateForm = () => {
-    setIsValid(
-      numberOfPagesInQuery &&
-        numberOfPagesInQuery > 0 &&
+  useEffect(() => {
+    const isValidInput = () => {
+      return (
+        numberOfPagesToQuery &&
+        numberOfPagesToQuery > 0 &&
         maxPageCount > 0 &&
-        numberOfPagesInQuery <= maxPageCount
-    );
-    setWasValidated(true);
+        numberOfPagesToQuery <= maxPageCount
+      );
+    };
+
+    setIsValid(isValidInput());
+  }, [numberOfPagesToQuery, maxPageCount]);
+
+  useEffect(() => {
+    setWasValidated(isValid);
+  }, [isValid]);
+
+  const scrapePages = () => {
+    scrapeButtonRef.current.blur();
+    if (isValid) {
+      props.setNumberOfPages(numberOfPagesToQuery);
+    }
   };
 
-  const onInputChange = (e) => {
-    setWasValidated(false);
-    console.log(e.target.value);
-    setNumberOfPagesInQuery(e.target.value);
-    console.log(`${numberOfPagesInQuery}, ${maxPageCount}`);
-    validateForm();
+  const clearQuery = () => {
+    clearButtonRef.current.blur();
+    setNumberOfPagesToQuery(0);
+    props.setNumberOfPages(0);
   };
 
   return (
     <Container>
       <Form noValidate validated={wasValidated}>
-        <Form.Group className="mb-3">
+        <Form.Group className="mb-3" controlId="validation01">
           <Form.Label>
             Please sepcify the number of pages to scrape from 1-
             {maxPageCount}:
           </Form.Label>
           <Form.Control
             name="numberOfPages"
+            ref={numberOfPagesRef}
             type="number"
-            value={numberOfPagesInQuery}
-            onChange={(e) => onInputChange(e)}
-            onBlur={validateForm}
+            value={numberOfPagesToQuery}
+            onChange={(e) => setNumberOfPagesToQuery(e.target.value)}
+            onBlur={(e) => setNumberOfPagesToQuery(e.target.value)}
             placeholder="0"
+            required={true}
           />
+          <Form.Control.Feedback type="invalid">
+            Expecting a number between 1 - {maxPageCount}
+          </Form.Control.Feedback>
         </Form.Group>
         <Button
+          name="scrapeButton"
+          ref={scrapeButtonRef}
           type="button"
           variant="primary"
           disabled={!isValid}
-          onClick={props.refreshResults}
+          onClick={scrapePages}
         >
           Scrape
+        </Button>{" "}
+        <Button
+          name="clearButton"
+          ref={clearButtonRef}
+          variant="secondary"
+          onClick={clearQuery}
+        >
+          Clear
         </Button>
       </Form>
     </Container>
