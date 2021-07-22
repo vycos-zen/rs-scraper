@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { Button, Container, Form } from "react-bootstrap";
 
-export function RsScrapePageInput() {
+export function RsScrapeInput({ refreshResults }) {
+  console.log(refreshResults)
   const [componentData, setComponentData] = useState({});
 
   const onInputChange = (e) => {
@@ -10,7 +11,7 @@ export function RsScrapePageInput() {
   };
 
   const onSubmit = () => {
-    console.log(componentData);
+    refreshResults();
   };
 
   return (

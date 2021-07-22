@@ -1,8 +1,21 @@
+import React, { useState } from "react";
+import { RsScrapeInput } from "./component/RsScrapeInput";
+import { RsScrapeResults } from "./component/RsScrapeResults";
+import { Container } from "react-bootstrap";
 import "./App.scss";
-import { RsScrapePageInput } from "./component/RsScrapePageInput";
 
-function App() {
-  return <RsScrapePageInput />;
+export function App() {
+  const [results, setResults] = useState([]);
+
+  const refreshResults = () => {
+    return ["buzz", "fizz buzz"];
+  };
+
+  return (
+    <Container>
+      <RsScrapeInput props={refreshResults} />
+      <br />
+      <RsScrapeResults props={{ results: ["fizz", "buzz"] }} />
+    </Container>
+  );
 }
-
-export default App;
