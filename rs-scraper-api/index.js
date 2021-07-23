@@ -18,11 +18,15 @@ const root = {
   },
   getOrCreateScrapedSite: ({ input }) => {
     console.log({ input });
-    
-    const id = nanoid();
-    inMemoryOfDatabase.scrapedSite[id] = input;
+    console.log(Object.keys(inMemoryOfDatabase.scrapedSite));
+    const instanceId = "id001";
+      /* Object.keys(inMemoryOfDatabase.scrapedSite).length > 0
+        ? "id001"
+        : Object.values(inMemoryOfDatabase.scrapedSite)[0].id; */
+    console.log(`instanceId: ${instanceId}`);
+    inMemoryOfDatabase.scrapedSite[instanceId] = input;
     console.log(inMemoryOfDatabase);
-    return { id: id};
+    return { id: instanceId };
   },
 };
 

@@ -17,16 +17,18 @@ const getOrCreateScrapedSiteQuery = {
 }`,
 };
 
-export const getOrCreateScrapedSiteWithId =  async () => {
+export const getOrCreateScrapedSiteWithId = async () => {
   fetch(localQraphqlUrl, {
     ...fetchDefaults,
     body: JSON.stringify(getOrCreateScrapedSiteQuery),
   })
     .then((res) => res.json())
     .then((res) => {
+      if (res.data.getOrCreateScrapedSite) {
+        console.log(res.data);
         const response = res.data.getOrCreateScrapedSite.id;
-        console.log(response)
-      return response;
+        return response;
+      }
     });
 };
 
