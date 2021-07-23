@@ -21,7 +21,7 @@ const root = {
     const id = nanoid();
     inMemoryOfDatabase.scrapeSites[id] = input;
     console.log(inMemoryOfDatabase);
-    return { id: id, targetUrl: inMemoryOfDatabase.scrapeSites[id].targetUrl };
+    return { id: id};
   },
 };
 
