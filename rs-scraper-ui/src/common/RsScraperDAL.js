@@ -9,22 +9,22 @@ const fetchDefaults = {
 
 const targetUrlQuery = { query: `{ targetUrl }` };
 
-const createScrapeSiteQuery = {
+const getOrCreateScrapedSiteQuery = {
   query: `mutation {
-    createScrapedSite(input: {targetUrl: "to the stars"}) {
+    getOrCreateScrapedSite(input: {targetUrl: "to the stars"}) {
       id
     }
 }`,
 };
 
-export const getScrapedSiteId =  async () => {
+export const getOrCreateScrapedSiteWithId =  async () => {
   fetch(localQraphqlUrl, {
     ...fetchDefaults,
-    body: JSON.stringify(createScrapeSiteQuery),
+    body: JSON.stringify(getOrCreateScrapedSiteQuery),
   })
     .then((res) => res.json())
     .then((res) => {
-        const response = res.data.createScrapedSite.id;
+        const response = res.data.getOrCreateScrapedSite.id;
         console.log(response)
       return response;
     });

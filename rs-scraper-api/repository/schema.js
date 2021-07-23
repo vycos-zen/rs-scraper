@@ -45,7 +45,7 @@ type Query {
 }
 
 type Mutation {
-  createScrapedSite(input: ScrapedSiteInput): ScrapedSite
+  getOrCreateScrapedSite(input: ScrapedSiteInput): ScrapedSite
   createScrapedPages(id: ID!, input: ScrapedPageInput): ScrapedPage
   createScrapedArticle(
     siteId: ID!

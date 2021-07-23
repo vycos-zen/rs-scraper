@@ -3,7 +3,7 @@ import { RsScrapeInput } from "./RsScrapeInput";
 import { RsScrapeResults } from "./RsScrapeResults";
 import { Container } from "react-bootstrap";
 import { ScrapedResult } from "../common/ScrapedResult";
-import { getTargetUrl, getScrapedSiteId } from "../common/RsScraperDAL";
+import { getTargetUrl, getOrCreateScrapedSiteWithId } from "../common/RsScraperDAL";
 
 export function RsScrape() {
   const [results, setResults] = useState([]);
@@ -14,7 +14,7 @@ export function RsScrape() {
     const refreshResults = async () => {
       const data = [];
       getTargetUrl();
-      const scrapedSiteId = await getScrapedSiteId();
+      const scrapedSiteId = await getOrCreateScrapedSiteWithId();
 
       console.log(scrapedSiteId);
 

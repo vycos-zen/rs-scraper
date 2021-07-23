@@ -10,16 +10,17 @@ const app = express();
 const port = 4242;
 
 const inMemoryOfDatabase = {};
-inMemoryOfDatabase.scrapeSites = {};
+inMemoryOfDatabase.scrapedSite = {};
 
 const root = {
   targetUrl: () => {
     return "to the starts";
   },
-  createScrapedSite: ({ input }) => {
+  getOrCreateScrapedSite: ({ input }) => {
     console.log({ input });
+    
     const id = nanoid();
-    inMemoryOfDatabase.scrapeSites[id] = input;
+    inMemoryOfDatabase.scrapedSite[id] = input;
     console.log(inMemoryOfDatabase);
     return { id: id};
   },
