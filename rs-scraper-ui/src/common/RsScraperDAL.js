@@ -1,7 +1,7 @@
 const localQraphqlUrl = "http://localhost:4242/graphql"
 
 export const getTargetUrl = () => {
-    fetch('localQraphqlUrl', {
+    fetch(localQraphqlUrl, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
