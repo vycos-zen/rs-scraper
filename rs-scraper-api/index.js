@@ -1,5 +1,6 @@
 import express from "express";
 import expressgraphql from "express-graphql";
+import cors from "cors";
 import { nanoid } from "nanoid";
 import { rsSchema } from "./repository/schema.js";
 
@@ -9,21 +10,22 @@ const app = express();
 const port = 4242;
 
 const inMemoryOfDatabase = {};
+inMemoryOfDatabase.scrapeSites = {};
 
 const root = {
   targetUrl: () => {
     return "to the starts";
   },
   createScrapedSite: ({ input }) => {
-    console.log(input);
+    console.log({ input });
     const id = nanoid();
-
-    inMemoryOfDatabase.scrapedSite = input;
-    inMemoryOfDatabase.scrapedSite.id = id;
+    inMemoryOfDatabase.scrapeSites[id] = input;
     console.log(inMemoryOfDatabase);
-    return inMemoryOfDatabase.scrapedSite;
+    return { id: id, targetUrl: inMemoryOfDatabase.scrapeSites[id].targetUrl };
   },
 };
+
+app.use(cors());
 
 app.get("/", (req, res) => {
   res.send("i am server");
