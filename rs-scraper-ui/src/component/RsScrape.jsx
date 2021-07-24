@@ -3,19 +3,23 @@ import { RsScrapeInput } from "./RsScrapeInput";
 import { RsScrapeResults } from "./RsScrapeResults";
 import { Container } from "react-bootstrap";
 import { ScrapedResult } from "../common/ScrapedResult";
-import { getTargetUrl, getOrCreateScrapedSiteWithId } from "../common/RsScraperDAL";
+import {
+  getTargetUrl,
+  getScrapedSite,
+  getOrCreateScrapedSiteWithId,
+} from "../common/RsScraperDAL";
 
 export function RsScrape() {
   const [results, setResults] = useState([]);
 
   const [numberOfPages, setNumberOfPages] = useState(0);
 
-  useEffect( () => {
+  useEffect(() => {
     const refreshResults = async () => {
       const data = [];
-      getTargetUrl();
       const scrapedSiteId = await getOrCreateScrapedSiteWithId();
-
+      console.log(`getScrapedSite${getScrapedSite("id001")}`);
+      const mockData = getScrapedSite(scrapedSiteId);
       console.log(scrapedSiteId);
 
       // TODO: replace mock data generation with api call once due

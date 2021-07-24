@@ -13,20 +13,28 @@ const inMemoryOfDatabase = {};
 inMemoryOfDatabase.scrapedSite = {};
 
 const root = {
-  targetUrl: () => {
+    targetUrl: () => {
     return "to the starts";
   },
   getOrCreateScrapedSite: ({ input }) => {
-    console.log({ input });
-    console.log(Object.keys(inMemoryOfDatabase.scrapedSite));
+    /* console.log({ input }); */
     const instanceId = "id001";
-      /* Object.keys(inMemoryOfDatabase.scrapedSite).length > 0
+    console.log(`object keys - ${Object.keys(inMemoryOfDatabase.scrapedSite)}`);
+    console.log(`object values - ${Object.values(inMemoryOfDatabase)}`);
+    /* Object.keys(inMemoryOfDatabase.scrapedSite).length > 0
         ? "id001"
         : Object.values(inMemoryOfDatabase.scrapedSite)[0].id; */
     console.log(`instanceId: ${instanceId}`);
     inMemoryOfDatabase.scrapedSite[instanceId] = input;
-    console.log(inMemoryOfDatabase);
+    console.log(`inMemoryOfDatabase${JSON.stringify(inMemoryOfDatabase)}}`);
     return { id: instanceId };
+  },
+  getScrapedSite: ({ input }) => {
+    
+    console.log(inMemoryOfDatabase.scrapedSite[input.id]);
+    return inMemoryOfDatabase.scrapedSite[input.id]
+      ? inMemoryOfDatabase.scrapedSite[input.id]
+      : null;
   },
 };
 

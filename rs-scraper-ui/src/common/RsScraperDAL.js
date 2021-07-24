@@ -17,6 +17,12 @@ const getOrCreateScrapedSiteQuery = {
 }`,
 };
 
+const getScrapedSiteQuery = (id) => {
+  return JSON.stringify({
+    query: `{id: ${id}}`,
+  });
+};
+
 export const getOrCreateScrapedSiteWithId = async () => {
   fetch(localQraphqlUrl, {
     ...fetchDefaults,
@@ -29,9 +35,33 @@ export const getOrCreateScrapedSiteWithId = async () => {
         const response = res.data.getOrCreateScrapedSite.id;
         return response;
       }
+    })
+    .catch((error) => {
+      console.log(error);
     });
 };
 
+export const getScrapedSite = async () => {
+  fetch(localQraphqlUrl, {
+    ...fetchDefaults,
+    body: getScrapedSiteQuery(),
+  })
+    .then((res) => res.json())
+    .then((res) => {
+      if (res.data.getScrapedSite) {
+        console.log(res.data.getScrapedSite);
+        const respone = res.data.getScrapedSite;
+        console.log(`getScrapedSiteQuery - response: ${respone}`);
+      } else {
+        console.log(`getScrapedSiteQuery - response: ${res}`);
+      }
+    })
+    .catch((error) => {
+      console.log(error);
+    });
+};
+
+// basic mock response only for ping
 export const getTargetUrl = () => {
   fetch(localQraphqlUrl, {
     ...fetchDefaults,
