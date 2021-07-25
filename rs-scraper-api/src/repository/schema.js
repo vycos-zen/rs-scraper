@@ -1,4 +1,4 @@
-import graphql from "graphql";
+/* import graphql from "graphql";
 const { buildSchema } = graphql;
 
 export const rsSchema = buildSchema(`
@@ -55,3 +55,4 @@ type Mutation {
 }
 
 `);
+ */
