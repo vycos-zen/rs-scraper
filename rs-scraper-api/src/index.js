@@ -1,23 +1,11 @@
 import cors from "cors";
-import { rsSchema } from "./repository/schema.js";
+import { typeDefs, resolvers } from "./repository/schema.js";
 import {
   getOrCreateScrapedSite,
   getScrapedSite,
 } from "./repository/mongoMockDb.js";
-const { ApolloServer, gql } = require("apollo-server-express");
+const { ApolloServer } = require("apollo-server-express");
 const express = require("express");
-
-const typeDefs = gql`
-  type Query {
-    hello: String
-  }
-`;
-
-const resolvers = {
-  Query: {
-    hello: () => "helloo",
-  },
-};
 
 const startApolloServer = async (typeDefs, resolvers) => {
   const server = new ApolloServer({ typeDefs, resolvers });
@@ -35,7 +23,7 @@ const startApolloServer = async (typeDefs, resolvers) => {
     (error) => console.log(error)
   );
 
-  console.log(server);
+  //console.log(server);
 
   return { server, app };
 };

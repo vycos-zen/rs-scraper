@@ -18,9 +18,10 @@ const getOrCreateScrapedSiteQuery = {
 };
 
 const getScrapedSiteQuery = (id) => {
-  return JSON.stringify({
+  const response = JSON.stringify({
     query: `{id: ${id}}`,
-  });
+  })
+  return response;
 };
 
 export const getOrCreateScrapedSiteWithId = async () => {
@@ -42,7 +43,7 @@ export const getOrCreateScrapedSiteWithId = async () => {
 };
 
 export const getScrapedSite = async () => {
-  fetch(localQraphqlUrl, {
+ await fetch(localQraphqlUrl, {
     ...fetchDefaults,
     body: getScrapedSiteQuery(),
   })
