@@ -1,17 +1,21 @@
 import cors from "cors";
 import { typeDefs, resolvers } from "./repository/schema.js";
-import {
-  getOrCreateScrapedSite,
-  getScrapedSite,
-} from "./repository/mongoMockDb.js";
+import { connectToDatastore } from "./repository/db.js";
 const { ApolloServer } = require("apollo-server-express");
 const express = require("express");
+const dotenv = require("dotenv");
 
 const startApolloServer = async (typeDefs, resolvers) => {
+  const config = dotenv.config();
+
+  console.log(config);
+  console.log(process.env.HELLO);
+
   const server = new ApolloServer({ typeDefs, resolvers });
   await server.start();
 
-  const port = 4242;
+  const port = process.env.API_PORT;
+  const db = connectToDatastore();
   const app = express();
   app.use(cors());
   app.get("/", (req, res) => {
@@ -25,9 +29,15 @@ const startApolloServer = async (typeDefs, resolvers) => {
 
   //console.log(server);
 
-  return { server, app };
+  return { server, app, port };
 };
 
-const { server, app } = startApolloServer(typeDefs, resolvers);
+const service = startApolloServer(typeDefs, resolvers);
 
-console.log(`node running on ${server}`);
+service
+  .then((service) => {
+    console.log(`node running on ${service.port}`);
+  })
+  .catch((error) => {
+    console.log(`error: ${error}`);
+  });

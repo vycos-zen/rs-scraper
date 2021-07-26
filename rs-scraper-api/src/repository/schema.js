@@ -1,5 +1,7 @@
+import { response } from "express";
 import { nanoid } from "nanoid";
 const { gql } = require("apollo-server-express");
+const { ScrapedSite } = require("./models");
 
 export const typeDefs = gql`
   type ScrapedSite {
@@ -11,6 +13,7 @@ export const typeDefs = gql`
   }
 
   input ScrapedSiteInput {
+    id: ID
     targetUrl: String!
   }
 
@@ -45,7 +48,7 @@ export const typeDefs = gql`
   }
 
   type Mutation {
-    getOrCreateScrapedSite(targetUrl: ScrapedSiteInput): ID
+    getOrCreateScrapedSite(input: ScrapedSiteInput!): ScrapedSite
     createScrapedPages(id: ID!, input: ScrapedPageInput): ScrapedPage
     createScrapedArticle(
       siteId: ID!
@@ -68,17 +71,17 @@ export const resolvers = {
     },
   },
   Mutation: {
-    getOrCreateScrapedSite: (targetUrl) => {
-      /* console.log({ input }); */
-      console.log(`targetUrl: ${targetUrl}`);
-      const instanceId = "id001";
-      /* const siteData = getOrCreateScrapedSite(targetUrl);
-      console.log({ ...siteData }); */
-      //return { ...siteData };
+    getOrCreateScrapedSite: async (_, { input }) => {
+      console.log(`targetUrl: ${input.targetUrl}`);
 
-      // _
-      const id = nanoid();
-      return id;
+      try {
+        const response = await ScrapedSite.create(input);
+        console.log(`response: ${response}`);
+        return response;
+      } catch (e) {
+        console.log(`error - getOrCreateScrapedSite: ${e.message}`);
+        return e.message;
+      }
     },
   },
 };
