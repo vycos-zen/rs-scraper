@@ -7,15 +7,15 @@ const dotenv = require("dotenv");
 
 const startApolloServer = async (typeDefs, resolvers) => {
   const config = dotenv.config();
+  const port = process.env.API_PORT;
 
-  console.log(config);
   console.log(process.env.HELLO);
+
+  const db = connectToDatastore();
 
   const server = new ApolloServer({ typeDefs, resolvers });
   await server.start();
 
-  const port = process.env.API_PORT;
-  const db = connectToDatastore();
   const app = express();
   app.use(cors());
   app.get("/", (req, res) => {
@@ -26,8 +26,6 @@ const startApolloServer = async (typeDefs, resolvers) => {
   await new Promise((resolve) => app.listen({ port: port }, resolve)).catch(
     (error) => console.log(error)
   );
-
-  //console.log(server);
 
   return { server, app, port };
 };

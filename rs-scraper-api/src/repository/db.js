@@ -8,7 +8,6 @@ export const connectToDatastore = () => {
     domain: process.env.MONGO_DOMAIN,
   };
   const mongoose = require("mongoose");
-  console.log(config);
   console.log(`connecting to ${config.mongoEnv}`);
   const uri = `mongodb+srv://${config.mongoUsr}:${config.mongoSecret}@${config.cluster}${config.domain}/${config.mongoDb}?retryWrites=true&w=majority`;
 
@@ -21,11 +20,11 @@ export const connectToDatastore = () => {
 
   const db = mongoose.connection;
   db.once("open", async () => {
-    console.log("Connected to database");
+    console.log("connected to mongodb");
   });
 
   db.on("error", () => {
-    console.log("Error connecting to database");
+    console.log("error connecting to mongodb");
   });
   return db;
 };

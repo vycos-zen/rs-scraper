@@ -1,11 +1,9 @@
-import { response } from "express";
-import { nanoid } from "nanoid";
 const { gql } = require("apollo-server-express");
-const { ScrapedSite } = require("./models");
+const { ScrapedSite, ScrapedPage, ScrapedArticle } = require("./models");
 
 export const typeDefs = gql`
   type ScrapedSite {
-    id: ID!
+    _id: ID!
     targetUrl: String!
     hitCount: Int
     pageCount: Int
@@ -13,7 +11,7 @@ export const typeDefs = gql`
   }
 
   input ScrapedSiteInput {
-    id: ID
+    _id: ID
     targetUrl: String!
   }
 
@@ -49,12 +47,6 @@ export const typeDefs = gql`
 
   type Mutation {
     getOrCreateScrapedSite(input: ScrapedSiteInput!): ScrapedSite
-    createScrapedPages(id: ID!, input: ScrapedPageInput): ScrapedPage
-    createScrapedArticle(
-      siteId: ID!
-      pageNumber: Int!
-      article: ScrapedArticleInput
-    ): ScrapedArticle
   }
 `;
 
@@ -75,32 +67,29 @@ export const resolvers = {
       console.log(`targetUrl: ${input.targetUrl}`);
 
       try {
-        const response = await ScrapedSite.create(input);
-        console.log(`response: ${response}`);
-        return response;
+        let scrapedSiteWithTargetUrl = await ScrapedSite.find({
+          targetUrl: input.targetUrl,
+        }).exec();
+
+        console.log(
+          `scrapedSiteWithTargetUrl: ${scrapedSiteWithTargetUrl._id}`
+        );
+        if (!scrapedSiteWithTargetUrl._id) {
+          console.log("create...");
+
+          scrapedSiteWithTargetUrl = await ScrapedSite.create({ ...input });
+
+          return scrapedSiteWithTargetUrl;
+        } else {
+          console.log(`response: ${scrapedSiteWithTargetUrl}`);
+          return scrapedSiteWithTargetUrl;
+        }
       } catch (e) {
         console.log(`error - getOrCreateScrapedSite: ${e.message}`);
         return e.message;
       }
     },
   },
-};
-
-const inMemoryOfDatabase = {};
-inMemoryOfDatabase.scrapedSite = {};
-
-const getOrCreateScrapedSite = (targetUrl) => {
-  console.log(`object keys - ${Object.keys(inMemoryOfDatabase.scrapedSite)}`);
-  console.log(`object values - ${Object.values(inMemoryOfDatabase)}`);
-  if (id && targetUrl) {
-    if (Object.entries().some()) {
-      return Object.entries()[0];
-    } else {
-      inMemoryOfDatabase.scrapedSite[id] = {
-        id: nanoid(),
-      };
-    }
-  } else console.log(`failed to getOrCreateScrapedSite`);
 };
 
 const getScrapedSite = (id) => {

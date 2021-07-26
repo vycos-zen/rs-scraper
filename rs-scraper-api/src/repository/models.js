@@ -1,6 +1,8 @@
 const mongoose = require("mongoose");
 
 const { Schema } = mongoose;
+const collectionName = "scrapedSiteCollection";
+const collection = { collection: collectionName };
 
 const ScrapedArticleSchema = new Schema({
   title: String,
@@ -15,14 +17,16 @@ const ScrapedPageSchema = new Schema({
   articles: [ScrapedArticleSchema],
 });
 
-const ScrapedSiteSchema = new Schema({
-  id: String,
-  targetUrl: String,
-  hitCount: Number,
-  pageCount: Number,
-  scrapedPages: [ScrapedPageSchema],
-});
+const ScrapedSiteSchema = new Schema(
+  {
+    targetUrl: String,
+    hitCount: Number,
+    pageCount: Number,
+    scrapedPages: [ScrapedPageSchema],
+  },
+  { ...collection }
+);
 
-const ScrapedArticle = mongoose.model("ScrapedArticle", ScrapedArticleSchema);
-const ScrapedPage = mongoose.model("ScrapedPage", ScrapedPageSchema);
+export const ScrapedArticle = mongoose.model("ScrapedArticle", ScrapedArticleSchema);
+export const ScrapedPage = mongoose.model("ScrapedPage", ScrapedPageSchema);
 export const ScrapedSite = mongoose.model("ScrapedSite", ScrapedSiteSchema);
