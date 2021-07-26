@@ -1,7 +1,8 @@
 const mongoose = require("mongoose");
 
+export const collectionName = "scrapedSiteCollection";
+
 const { Schema } = mongoose;
-const collectionName = "scrapedSiteCollection";
 const collection = { collection: collectionName };
 
 const ScrapedArticleSchema = new Schema({
@@ -27,6 +28,11 @@ const ScrapedSiteSchema = new Schema(
   { ...collection }
 );
 
-export const ScrapedArticle = mongoose.model("ScrapedArticle", ScrapedArticleSchema);
-export const ScrapedPage = mongoose.model("ScrapedPage", ScrapedPageSchema);
-export const ScrapedSite = mongoose.model("ScrapedSite", ScrapedSiteSchema);
+/* export const ScrapedArticle = mongoose.model("ScrapedArticle", ScrapedArticleSchema, collectionName);
+export const ScrapedPage = mongoose.model("ScrapedPage", ScrapedPageSchema, collectionName);
+ */
+export const ScrapedSite = mongoose.model(
+  "ScrapedSite",
+  ScrapedSiteSchema,
+  collectionName
+);

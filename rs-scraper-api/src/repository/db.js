@@ -1,4 +1,14 @@
-export const connectToDatastore = () => {
+let db;
+export const mongoDb = async () => {
+  if (db) {
+    return db;
+  } else {
+    const db = await connectToDatastore();
+    return db;
+  }
+};
+
+const connectToDatastore = async () => {
   const config = {
     mongoEnv: process.env.MONGO_ENV,
     mongoUsr: process.env.MONGO_USR,
@@ -10,6 +20,7 @@ export const connectToDatastore = () => {
   const mongoose = require("mongoose");
   console.log(`connecting to ${config.mongoEnv}`);
   const uri = `mongodb+srv://${config.mongoUsr}:${config.mongoSecret}@${config.cluster}${config.domain}/${config.mongoDb}?retryWrites=true&w=majority`;
+  const db = mongoose.connection;
 
   mongoose.connect(uri, {
     useNewUrlParser: true,
@@ -18,7 +29,6 @@ export const connectToDatastore = () => {
     useCreateIndex: true,
   });
 
-  const db = mongoose.connection;
   db.once("open", async () => {
     console.log("connected to mongodb");
   });

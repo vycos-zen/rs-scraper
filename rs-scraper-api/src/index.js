@@ -1,17 +1,18 @@
 import cors from "cors";
-import { typeDefs, resolvers } from "./repository/schema.js";
-import { connectToDatastore } from "./repository/db.js";
+import { typeDefs } from "./repository/typeDefs";
+import { resolvers } from "./repository/resolvers";
+import { mongoDb } from "./repository/db";
 const { ApolloServer } = require("apollo-server-express");
 const express = require("express");
 const dotenv = require("dotenv");
 
 const startApolloServer = async (typeDefs, resolvers) => {
-  const config = dotenv.config();
+  dotenv.config();
   const port = process.env.API_PORT;
 
   console.log(process.env.HELLO);
 
-  const db = connectToDatastore();
+  const db = await mongoDb();
 
   const server = new ApolloServer({ typeDefs, resolvers });
   await server.start();
@@ -27,7 +28,7 @@ const startApolloServer = async (typeDefs, resolvers) => {
     (error) => console.log(error)
   );
 
-  return { server, app, port };
+  return { server, app, db, port };
 };
 
 const service = startApolloServer(typeDefs, resolvers);
