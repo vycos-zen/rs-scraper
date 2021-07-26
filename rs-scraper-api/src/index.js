@@ -35,7 +35,13 @@ const service = startApolloServer(typeDefs, resolvers);
 
 service
   .then((service) => {
-    console.log(`node running on ${service.port}`);
+    console.log(
+      `url: ${
+        process.env.NODE_ENV === "development"
+          ? "localhost"
+          : process.env.API_DOMAIN
+      }:${service.port}${service.server.graphqlPath}`
+    );
   })
   .catch((error) => {
     console.log(`error: ${error}`);

@@ -28,9 +28,17 @@ const ScrapedSiteSchema = new Schema(
   { ...collection }
 );
 
-/* export const ScrapedArticle = mongoose.model("ScrapedArticle", ScrapedArticleSchema, collectionName);
-export const ScrapedPage = mongoose.model("ScrapedPage", ScrapedPageSchema, collectionName);
- */
+export const ScrapedArticle = mongoose.model(
+  "ScrapedArticle",
+  ScrapedArticleSchema,
+  collectionName
+);
+export const ScrapedPage = mongoose.model(
+  "ScrapedPage",
+  ScrapedPageSchema,
+  collectionName
+);
+
 export const ScrapedSite = mongoose.model(
   "ScrapedSite",
   ScrapedSiteSchema,

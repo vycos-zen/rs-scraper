@@ -1,14 +1,12 @@
-let db;
+const { collectionName } = require("./models");
 export const mongoDb = async () => {
-  if (db) {
-    return db;
-  } else {
-    const db = await connectToDatastore();
-    return db;
-  }
+  return db ? db : await connectToDatastore();
 };
 
+let db;
+
 const connectToDatastore = async () => {
+  const mongoose = require("mongoose");
   const config = {
     mongoEnv: process.env.MONGO_ENV,
     mongoUsr: process.env.MONGO_USR,
@@ -17,20 +15,24 @@ const connectToDatastore = async () => {
     cluster: process.env.MONGO_CLUSTER,
     domain: process.env.MONGO_DOMAIN,
   };
-  const mongoose = require("mongoose");
-  console.log(`connecting to ${config.mongoEnv}`);
   const uri = `mongodb+srv://${config.mongoUsr}:${config.mongoSecret}@${config.cluster}${config.domain}/${config.mongoDb}?retryWrites=true&w=majority`;
+  
+  console.log(`connecting to mongodb environment: ${config.mongoEnv}`);
+  
   const db = mongoose.connection;
-
+  
   mongoose.connect(uri, {
     useNewUrlParser: true,
     useFindAndModify: false,
     useUnifiedTopology: true,
     useCreateIndex: true,
   });
-
+  
   db.once("open", async () => {
-    console.log("connected to mongodb");
+    const scrapedSiteCollection = db.collection(collectionName);
+    if (scrapedSiteCollection) {
+      console.log(`connected to mongodb collection: ${scrapedSiteCollection.collection.collectionName}`);
+    }
   });
 
   db.on("error", () => {
@@ -43,6 +45,11 @@ export const disconect = () => {
   if (!db) {
     return;
   }
-
   mongoose.disconnect();
+};
+
+const scrape = async (numberOfPages) => {
+  for (let index = 0; index < numberOfPages; index++) {
+    console.log(index);
+  }
 };

@@ -5,11 +5,19 @@ const { ScrapedSite, collectionName } = require("./models");
 export const resolvers = {
   Query: {
     hello: () => "helloo",
-    targetUrl: () => {
-      return "to the starts";
+    targetUrl: async (siteID) => {
+      const db = await mongoDb();
+      let scrapedSiteTargetUrlWithId = await db
+        .collection(collectionName)
+        .findOne({
+          _id: input._id,
+        });
+
+      return scrapedSiteTargetUrlWithId
+        ? scrapedSiteTargetUrlWithId
+        : "Site does not exists.";
     },
     getScrapedPages: (siteId, numberOfPages) => {
-      
       return null;
     },
   },
@@ -17,12 +25,13 @@ export const resolvers = {
     getOrCreateScrapedSite: async (_, { input }) => {
       console.log(`targetUrl: ${input.targetUrl}`);
       const db = await mongoDb();
-      const scrapedSiteCollection = db.collection(collectionName);
 
       try {
-        let scrapedSiteWithTargetUrl = await scrapedSiteCollection.findOne({
-          targetUrl: input.targetUrl,
-        });
+        let scrapedSiteWithTargetUrl = await db
+          .collection(collectionName)
+          .findOne({
+            targetUrl: input.targetUrl,
+          });
 
         if (!scrapedSiteWithTargetUrl) {
           scrapedSiteWithTargetUrl = await ScrapedSite.create({ ...input });
