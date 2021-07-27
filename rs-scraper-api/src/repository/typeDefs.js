@@ -11,8 +11,9 @@ export const typeDefs = gql`
 
   input ScrapedSiteInput {
     _id: ID
-    targetUrl: String!
+    targetUrl: String
     reScrape: Boolean
+    numberOfPages: Int
   }
 
   type ScrapedPage {
@@ -21,20 +22,9 @@ export const typeDefs = gql`
     articles: [ScrapedArticle]
   }
 
-  input ScrapedPageInput {
-    pageNumber: Int!
-  }
-
   type ScrapedArticle {
     title: String
     articleUrl: String
-    authorName: String
-    description: String
-  }
-
-  input ScrapedArticleInput {
-    title: String!
-    articleUrl: String!
     authorName: String
     description: String
   }
