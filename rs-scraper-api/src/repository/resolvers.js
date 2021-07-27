@@ -1,4 +1,4 @@
-import { mongoDb, scrape } from "./db";
+import { mongoDb, getOrCreateScrapedSiteInDb } from "./db";
 
 const { ScrapedSite, collectionName } = require("./models");
 
@@ -23,30 +23,17 @@ export const resolvers = {
   },
   Mutation: {
     getOrCreateScrapedSite: async (_, { input }) => {
-      console.log(`id: ${input._id}, targetUrl: ${input.targetUrl}`);
-      const db = await mongoDb();
+      console.log(
+        `getOrCreate with id: ${input._id}, targetUrl: ${input.targetUrl}`
+      );
 
-      try {
-        let scrapedSiteWithTargetUrl = await db
-          .collection(collectionName)
-          .findOne({
-            $or: [{ _id: input._id }, { targetUrl: input.targetUrl }],
-          });
-
-        if (!scrapedSiteWithTargetUrl) {
-          scrapedSiteWithTargetUrl = await ScrapedSite.create({ ...input });
-          console.log(`created new: ${scrapedSiteWithTargetUrl._id}`);
-        }
-        if (input.reScrape) {
-          console.log(`rescrape: ${input.reScrape}`);
-          scrape(scrapedSiteWithTargetUrl._id, input.numberOfPages);
-        }
-        console.log(`returning existing: ${scrapedSiteWithTargetUrl._id}`);
-        return scrapedSiteWithTargetUrl;
-      } catch (e) {
-        console.log(`error - getOrCreateScrapedSite: ${e.message}`);
-        return e.message;
-      }
+      const scrapedSite = await getOrCreateScrapedSiteInDb(
+        input._id,
+        input.targetUrl,
+        input.reScrape,
+        input.numberOfPages
+      );
+      return scrapedSite;
     },
   },
 };

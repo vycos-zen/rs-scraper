@@ -1,4 +1,9 @@
-const { ScrapedPage, ScrapedArticle, collectionName } = require("./models");
+const {
+  ScrapedSite,
+  ScrapedPage,
+  ScrapedArticle,
+  collectionName,
+} = require("./models");
 export const mongoDb = async () => {
   return db ? db : await connectToDatastore();
 };
@@ -51,13 +56,12 @@ export const disconect = () => {
 };
 
 const updateScrapedPages = async (siteId, scrapedPages) => {
-  console.log(scrapedPages);
   const db = await mongoDb();
   const scrapedSiteCollection = db.collection(collectionName);
   const query = { _id: siteId };
   const update = {
     $inc: { hitcount: 1 },
-    $push: {
+    $set: {
       scrapedPages: scrapedPages,
     },
   };
@@ -67,7 +71,6 @@ const updateScrapedPages = async (siteId, scrapedPages) => {
     .updateOne(query, update, options)
     .then((result) => {
       const { matchedCount, modifiedCount } = result;
-      console.log(result);
       if (matchedCount && modifiedCount) {
         console.log(`successfully updated the item.`);
       }
@@ -75,7 +78,54 @@ const updateScrapedPages = async (siteId, scrapedPages) => {
     .catch((err) => console.error(`failed to update the item: ${err}`));
 };
 
+export const getOrCreateScrapedSiteInDb = async (
+  siteId,
+  targetUrl,
+  reScrape,
+  numberOfPages
+) => {
+  const db = await mongoDb();
+  const scrapedSiteCollection = db.collection(collectionName);
+
+  try {
+    let scrapedSiteWithTargetUrl = await scrapedSiteCollection.findOne({
+      $or: [{ _id: siteId }, { targetUrl: targetUrl }],
+    });
+
+    console.log(`scrapedSiteWithTargetUrl object: ${scrapedSiteWithTargetUrl}`);
+
+    if (!scrapedSiteWithTargetUrl) {
+      if (!targetUrl) {
+        throw new Error("targetUrl is mandatory");
+      }
+      console.log(`${scrapedSiteWithTargetUrl}`);
+      scrapedSiteWithTargetUrl = await ScrapedSite.create({
+        hitCount: 1,
+        targetUrl: targetUrl,
+      });
+      console.log(`created new: ${scrapedSiteWithTargetUrl._id}`);
+    }
+
+    if (reScrape) {
+      console.log(`rescrape: ${reScrape}`);
+      await scrape(scrapedSiteWithTargetUrl._id, reScrape, numberOfPages);
+    }
+    console.log(
+      `returning existing: ${
+        (scrapedSiteWithTargetUrl._id, scrapedSiteWithTargetUrl.hitCount)
+      }`
+    );
+    return scrapedSiteWithTargetUrl;
+  } catch (e) {
+    console.log(`error - getOrCreateScrapedSite: ${e.message}`);
+    return e.message;
+  }
+};
+
 const getScrapedPages = (numberOfPages) => {
+  if (!numberOfPages || typeof numberOfPages !== "number") {
+    throw new Error(`invalid input for number, got: ${numberOfPages}`);
+  }
   const pages = [];
   for (let index = 0; index < numberOfPages; index++) {
     const articles = Array.from([
@@ -100,6 +150,8 @@ const getScrapedPages = (numberOfPages) => {
     });
     pages.push(page);
   }
+
+  console.log(`pages: ${pages}`);
 
   return pages;
 };
@@ -126,9 +178,8 @@ export const scrape = async (siteId, dropExisting, numberOfPages) => {
       const { matchedCount, modifiedCount } = result;
       if (matchedCount && modifiedCount) {
         console.log(`successfully droped pages`);
+        updateScrapedPages(siteId, scrapedPages);
       }
     })
     .catch((err) => console.error(`failed to droped pages: ${err}`));
-
-  updateScrapedPages(siteId, scrapedPages);
 };
