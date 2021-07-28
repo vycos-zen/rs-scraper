@@ -4,14 +4,14 @@ const {
   ScrapedArticle,
   collectionName,
 } = require("./models");
-export const mongoDb = async () => {
-  return db ? db : await connectToDatastore();
-};
 
-let db;
+const contextMongoDb = { mongoose: null, db: null, contextCollection: null };
 
 const connectToDatastore = async () => {
   const mongoose = require("mongoose");
+
+  contextMongoDb.mongoose = mongoose;
+
   const config = {
     mongoEnv: process.env.MONGO_ENV,
     mongoUsr: process.env.MONGO_USR,
@@ -24,58 +24,77 @@ const connectToDatastore = async () => {
 
   console.log(`connecting to mongodb environment: ${config.mongoEnv}`);
 
-  const db = mongoose.connection;
+  try {
+    contextMongoDb.db = contextMongoDb.mongoose.connection;
 
-  mongoose.connect(uri, {
-    useNewUrlParser: true,
-    useFindAndModify: false,
-    useUnifiedTopology: true,
-    useCreateIndex: true,
-  });
+    contextMongoDb.mongoose.connect(uri, {
+      useNewUrlParser: true,
+      useFindAndModify: false,
+      useUnifiedTopology: true,
+      useCreateIndex: true,
+    });
 
-  db.once("open", async () => {
-    const scrapedSiteCollection = db.collection(collectionName);
-    if (scrapedSiteCollection) {
-      console.log(
-        `connected to mongodb collection: ${scrapedSiteCollection.collection.collectionName}`
-      );
-    }
-  });
+    contextMongoDb.db.once("open", async () => {
+      contextMongoDb.contextCollection =
+        contextMongoDb.db.collection(collectionName);
+      if (contextMongoDb.contextCollection) {
+        console.log(
+          `connected to mongodb collection: ${contextMongoDb.contextCollection.collection.collectionName}`
+        );
+      }
+    });
 
-  db.on("error", () => {
-    console.log("error connecting to mongodb");
-  });
-  return db;
+    contextMongoDb.db.on("error", () => {
+      console.log("error connecting to mongodb");
+    });
+    return contextMongoDb.db;
+  } catch (error) {
+    console.log("error on connectToDatastore");
+  }
 };
 
-export const disconect = () => {
-  if (!db) {
+export const disconnectFromMongoDb = () => {
+  if (!contextMongoDb.db) {
     return;
   }
-  mongoose.disconnect();
+  contextMongoDb.mongoose.disconnect();
+};
+
+const incrementHitCount = async (siteId) => {
+  const query = { _id: siteId };
+  const incrementHitCount = {
+    $inc: { hitCount: 1 },
+  };
+  await contextMongoDb.contextCollection
+    .updateOne(query, incrementHitCount)
+    .then((result) => {
+      const { matchedCount, modifiedCount } = result;
+      if (matchedCount && modifiedCount) {
+        console.log(`incremented hitCount`);
+      }
+    })
+    .catch((err) => console.error(`error incrementing hitCount: ${err}`));
 };
 
 const updateScrapedPages = async (siteId, scrapedPages) => {
-  const db = await mongoDb();
-  const scrapedSiteCollection = db.collection(collectionName);
+  await connectToDatastore();
   const query = { _id: siteId };
   const update = {
-    $inc: { hitcount: 1 },
     $set: {
       scrapedPages: scrapedPages,
     },
   };
   const options = { upsert: false };
 
-  await scrapedSiteCollection
+  await contextMongoDb.contextCollection
     .updateOne(query, update, options)
     .then((result) => {
       const { matchedCount, modifiedCount } = result;
       if (matchedCount && modifiedCount) {
-        console.log(`successfully updated the item.`);
+        console.log(`successfully updated scrapedPages.`);
       }
     })
-    .catch((err) => console.error(`failed to update the item: ${err}`));
+    .catch((err) => console.error(`failed to update scrapedPages: ${err}`));
 };
 
 export const getOrCreateScrapedSiteInDb = async (
@@ -84,37 +103,40 @@ export const getOrCreateScrapedSiteInDb = async (
   reScrape,
   numberOfPages
 ) => {
-  const db = await mongoDb();
-  const scrapedSiteCollection = db.collection(collectionName);
-
   try {
-    let scrapedSiteWithTargetUrl = await scrapedSiteCollection.findOne({
+    await connectToDatastore();
+    const locateSiteQuery = {
       $or: [{ _id: siteId }, { targetUrl: targetUrl }],
-    });
+    };
 
-    console.log(`scrapedSiteWithTargetUrl object: ${scrapedSiteWithTargetUrl}`);
+    let scrapedSiteWithTargetUrl =
+      await contextMongoDb.contextCollection.findOne(locateSiteQuery);
 
     if (!scrapedSiteWithTargetUrl) {
       if (!targetUrl) {
-        throw new Error("targetUrl is mandatory");
+        throw new Error("targetUrl is mandatory when no id provided");
       }
-      console.log(`${scrapedSiteWithTargetUrl}`);
       scrapedSiteWithTargetUrl = await ScrapedSite.create({
-        hitCount: 1,
         targetUrl: targetUrl,
       });
       console.log(`created new: ${scrapedSiteWithTargetUrl._id}`);
     }
 
+    incrementHitCount(scrapedSiteWithTargetUrl._id);
+
+    console.log(`rescrape site: ${reScrape}`);
     if (reScrape) {
-      console.log(`rescrape: ${reScrape}`);
-      await scrape(scrapedSiteWithTargetUrl._id, reScrape, numberOfPages);
+      await scrape(scrapedSiteWithTargetUrl._id, numberOfPages);
     }
-    console.log(
-      `returning existing: ${
-        (scrapedSiteWithTargetUrl._id, scrapedSiteWithTargetUrl.hitCount)
-      }`
+
+    scrapedSiteWithTargetUrl = await contextMongoDb.contextCollection.findOne(
+      locateSiteQuery
     );
+
+    console.log(
+      `returning site: ${scrapedSiteWithTargetUrl._id}, hitcount ${scrapedSiteWithTargetUrl.hitCount}`
+    );
+
     return scrapedSiteWithTargetUrl;
   } catch (e) {
     console.log(`error - getOrCreateScrapedSite: ${e.message}`);
@@ -156,30 +178,28 @@ const getScrapedPages = (numberOfPages) => {
   return pages;
 };
 
-export const scrape = async (siteId, dropExisting, numberOfPages) => {
+export const scrape = async (siteId, numberOfPages) => {
   // dev mock
   const scrapedPages = getScrapedPages(numberOfPages);
   // dev mock
 
-  const db = await mongoDb();
-  const scrapedSiteCollection = db.collection(collectionName);
-
   const query = { _id: siteId };
   const dropPages = {
-    $inc: { hitcount: 1 },
     $set: {
       scrapedPages: [],
     },
   };
 
-  await scrapedSiteCollection
+  await contextMongoDb.contextCollection
     .updateOne(query, dropPages)
     .then((result) => {
       const { matchedCount, modifiedCount } = result;
       if (matchedCount && modifiedCount) {
-        console.log(`successfully droped pages`);
-        updateScrapedPages(siteId, scrapedPages);
+        console.log(`successfully dropped pages`);
       }
+    })
+    .then(async () => {
+      await updateScrapedPages(siteId, scrapedPages);
     })
     .catch((err) => console.error(`failed to droped pages: ${err}`));
 };

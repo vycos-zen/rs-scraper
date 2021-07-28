@@ -1,6 +1,6 @@
-import { mongoDb, getOrCreateScrapedSiteInDb } from "./db";
+import { getOrCreateScrapedSiteInDb, disconnectFromMongoDb } from "./db";
 
-const { ScrapedSite, collectionName } = require("./models");
+const { collectionName } = require("./models");
 
 export const resolvers = {
   Query: {
@@ -33,6 +33,8 @@ export const resolvers = {
         input.reScrape,
         input.numberOfPages
       );
+      await disconnectFromMongoDb();
+
       return scrapedSite;
     },
   },

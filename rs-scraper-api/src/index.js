@@ -1,7 +1,6 @@
 import cors from "cors";
 import { typeDefs } from "./repository/typeDefs";
 import { resolvers } from "./repository/resolvers";
-import { mongoDb } from "./repository/db";
 const { ApolloServer } = require("apollo-server-express");
 const express = require("express");
 const dotenv = require("dotenv");
@@ -11,8 +10,6 @@ const startApolloServer = async (typeDefs, resolvers) => {
   const port = process.env.API_PORT;
 
   console.log(process.env.HELLO);
-
-  const db = await mongoDb();
 
   const server = new ApolloServer({ typeDefs, resolvers });
   await server.start();
@@ -28,7 +25,7 @@ const startApolloServer = async (typeDefs, resolvers) => {
     (error) => console.log(error)
   );
 
-  return { server, app, db, port };
+  return { server, app, port };
 };
 
 const service = startApolloServer(typeDefs, resolvers);
