@@ -4,6 +4,7 @@ const {
   ScrapedArticle,
   collectionName,
 } = require("./models");
+const { getScrapedPages } = require("../common/scraperService");
 
 const contextMongoDb = { mongoose: null, db: null, contextCollection: null };
 
@@ -144,45 +145,7 @@ export const getOrCreateScrapedSiteInDb = async (
   }
 };
 
-const getScrapedPages = (numberOfPages) => {
-  if (!numberOfPages || typeof numberOfPages !== "number") {
-    throw new Error(`invalid input for number, got: ${numberOfPages}`);
-  }
-  const pages = [];
-  for (let index = 0; index < numberOfPages; index++) {
-    const articles = Array.from([
-      new ScrapedArticle({
-        title: "first time on graphql",
-        articleUrl: "web address",
-        authorName: "me",
-        description: "graphql rocks",
-      }),
-      new ScrapedArticle({
-        title: "first time on graphql",
-        articleUrl: "web address",
-        authorName: "me",
-        description: "graphql still rocks",
-      }),
-    ]);
-
-    const page = new ScrapedPage({
-      pageNumber: index,
-      articleCount: 1,
-      articles: articles,
-    });
-    pages.push(page);
-  }
-
-  console.log(`pages: ${pages}`);
-
-  return pages;
-};
-
 export const scrape = async (siteId, numberOfPages) => {
-  // dev mock
-  const scrapedPages = getScrapedPages(numberOfPages);
-  // dev mock
-
   const query = { _id: siteId };
   const dropPages = {
     $set: {
@@ -199,6 +162,7 @@ export const scrape = async (siteId, numberOfPages) => {
       }
     })
     .then(async () => {
+      const scrapedPages = await getScrapedPages(numberOfPages);
       await updateScrapedPages(siteId, scrapedPages);
     })
     .catch((err) => console.error(`failed to droped pages: ${err}`));
