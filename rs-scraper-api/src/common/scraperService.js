@@ -9,10 +9,11 @@ const getScrapedPageData = async (targetUrl, subPageUrl) => {
 
     $("article").each((index, element) => {
       const articleTitle = $(element).find("h1").text();
-
+      const articleUrl = $(element).attr("href");
+      console.log(element.children);
       const article = new ScrapedArticle({
         title: `${articleTitle}`,
-        articleUrl: "web address",
+        articleUrl: articleUrl,
         authorName: "me",
         description: ``,
       });
@@ -41,10 +42,10 @@ export const getScrapedPages = async (numberOfPages) => {
       "/page/5/"
     );
     pages.push(page);
-    console.log(`page data: ${page}`);
+    //console.log(`page data: ${page}`);
   }
 
-  console.log(`pages: ${pages}`);
+  //console.log(`pages: ${pages}`);
 
   return pages;
 };
