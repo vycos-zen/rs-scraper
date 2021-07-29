@@ -17,7 +17,7 @@ export function RsScrape() {
   useEffect(() => {
     const refreshResults = async () => {
       const data = [];
-      const scrapedSiteId = await getOrCreateScrapedSiteWithId();
+      const scrapedSite = await getOrCreateScrapedSiteWithId();
       console.log(`getScrapedSite${getScrapedSite("id001")}`);
       const mockData = getScrapedSite(scrapedSiteId);
       console.log(scrapedSiteId);

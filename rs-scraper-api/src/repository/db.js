@@ -14,6 +14,8 @@ const connectToDatastore = async () => {
   contextMongoDb.mongoose = mongoose;
 
   const config = {
+    mongoServer: prcoess.env.MONGO_SERVER,
+    mongoDbPort: process.env.MONGO_PORT,
     mongoEnv: process.env.MONGO_ENV,
     mongoUsr: process.env.MONGO_USR,
     mongoSecret: process.env.MONGO_SECRET,
@@ -21,7 +23,10 @@ const connectToDatastore = async () => {
     cluster: process.env.MONGO_CLUSTER,
     domain: process.env.MONGO_DOMAIN,
   };
-  const uri = `mongodb+srv://${config.mongoUsr}:${config.mongoSecret}@${config.cluster}${config.domain}/${config.mongoDb}?retryWrites=true&w=majority`;
+  const uri = config.mongoServer.includes("+srv")
+    ? `${config.mongoServer}${config.mongoUsr}:${config.mongoSecret}@${config.cluster}${config.domain}/${config.mongoDb}?retryWrites=true&w=majority`
+    : `
+  ${config.mongoServer}${config.mongoEnv}:${config.mongoDbPort}/${config.mongoDb}`;
 
   console.log(`connecting to mongodb environment: ${config.mongoEnv}`);
 
