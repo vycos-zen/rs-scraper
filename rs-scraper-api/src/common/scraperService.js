@@ -7,15 +7,24 @@ const getScrapedPageData = async (targetUrl, subPageUrl) => {
   await axios.get(`${targetUrl}${subPageUrl}`).then((res) => {
     const $ = cheerio.load(res.data);
 
-    $("article").each((index, element) => {
-      const articleTitle = $(element).find("h1").text();
-      const articleUrl = $(element).attr("href");
-      console.log(element.children);
+    $("article").each((index, articleElement) => {
+      const articleTitle = $(articleElement).find("h1").text();
+      const articleUrl = $(articleElement).find("a").attr("href");
+      const authorName = $(articleElement).find(".post-author").text();
+      const postContent = $(articleElement).find(".post-content").text();
+
+      console.log({
+        articleTitle,
+        articleUrl,
+        authorName,
+        authorName,
+        postContent,
+      });
       const article = new ScrapedArticle({
-        title: `${articleTitle}`,
+        title: articleTitle,
         articleUrl: articleUrl,
-        authorName: "me",
-        description: ``,
+        authorName: authorName,
+        description: postContent,
       });
       articles.push(article);
     });
@@ -27,7 +36,6 @@ const getScrapedPageData = async (targetUrl, subPageUrl) => {
     articles: articles,
   });
 
-  console.log(scrapedPage);
   return scrapedPage;
 };
 
