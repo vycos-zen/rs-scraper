@@ -1,15 +1,14 @@
 import { ScrapedSite, collectionName } from "./models.js";
 import { getScrapedPages } from "../common/scraperService.js";
+import mongoose from "mongoose";
 
 const contextMongoDb = { mongoose: null, db: null, contextCollection: null };
 
 const connectToDatastore = async () => {
-  const mongoose = require("mongoose");
-
   contextMongoDb.mongoose = mongoose;
 
   const config = {
-    mongoServer: prcoess.env.MONGO_SERVER,
+    mongoServer: process.env.MONGO_SERVER,
     mongoDbPort: process.env.MONGO_PORT,
     mongoEnv: process.env.MONGO_ENV,
     mongoUsr: process.env.MONGO_USR,

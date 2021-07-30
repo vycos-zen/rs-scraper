@@ -1,13 +1,11 @@
 FROM node:16
 
-WORKDIR /usr/src/app
+WORKDIR /app
 
 COPY package*.json ./
 
-RUN npm install
+RUN npm i
 
 COPY . .
 
-EXPOSE 4242
-
-CMD ["node", "api.js"]
+CMD ["node", "src/api.js"]

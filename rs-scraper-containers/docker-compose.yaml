@@ -2,24 +2,30 @@ version: "3.8"
 services:
   rs-scraper-mongodb:
     image: mongo
-    container_name: peterkollerlv/rs-local-mongodb
+    container_name: rs-scraper-mongodb
     volumes:
-      - /home/rs-scraper-agent/mongodb/database:/data/db
+      - rs-scraper-mongodb:/rs-scraper-mongodb/databaseVolume
     expose:
       - "27017"
     ports:
       - 27017:27017
   rs-scraper-api:
+    build:
+      context: ./rs-scraper-api/
     image: peterkollerlv/rs-scraper-api
-    container_name: peterkollerlv/rs-scraper-api
+    container_name: rs-scraper-api
     expose:
       - "4242"
     ports:
       - "4242:4242"
   rs-scraper-ui:
+    build:
+      context: ./rs-scraper-ui/
     image: peterkollerlv/rs-scraper-ui
-    container_name: peterkollerlv/rs-scraper-ui
+    container_name: rs-scraper-ui
     expose:
       - "3000"
     ports:
       - 3000:3000
+volumes:
+  rs-scraper-mongodb:

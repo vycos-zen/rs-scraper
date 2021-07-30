@@ -1,21 +1,33 @@
 import React from "react";
 import { Container, ListGroup } from "react-bootstrap";
-import { nanoid } from "nanoid"
+import { nanoid } from "nanoid";
 
 export function RsScrapeResults({ props }) {
-  const listItem = (scrapeResult) => (
+  const articleItem = (articleData) => (
+    <ListGroup.Item>
+      <span>{articleData.title}</span>
+      <a href={articleData.articleUrl}>{articleData.articleUrl}</a>
+    </ListGroup.Item>
+  );
+
+  const articleList = (scrapeResult) => (
     <ListGroup.Item key={nanoid()}>
-      <span>
-        Article: {scrapeResult.pageNumber}/{scrapeResult.indexOnPage} Link:{" "}
-        {scrapeResult.articleLink}
-      </span>
+      <span>Page: {scrapeResult.pageNumber}</span>
+      <ListGroup>
+        {scrapeResult.articles.map((article) => articleItem(article))}
+      </ListGroup>
     </ListGroup.Item>
   );
 
   return (
     <Container>
+      {console.log(props)}
       <ListGroup>
-        {props.scrapeResults.map((scrapeResult) => listItem(scrapeResult))}
+        {props.scrapeResult
+          ? props.scrapeResults.scrapedPages.map((scrapeResult) =>
+              articleList(scrapeResult)
+            )
+          : null}
       </ListGroup>
     </Container>
   );
