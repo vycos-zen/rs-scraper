@@ -4,26 +4,26 @@ import { nanoid } from "nanoid";
 
 export function RsScrapeResults({ props }) {
   const articleItem = (articleData) => (
-    <ListGroup.Item>
+    <ListGroup.Item key={articleData._id}>
       <span>{articleData.title}</span>
       <a href={articleData.articleUrl}>{articleData.articleUrl}</a>
     </ListGroup.Item>
   );
 
-  const articleList = (scrapeResult) => (
-    <ListGroup.Item key={nanoid()}>
-      <span>Page: {scrapeResult.pageNumber}</span>
+  const articleList = (scrapedPage) => (
+    <ListGroup.Item key={scrapedPage._id}>
+      <span>Page: {scrapedPage.pageNumber}</span>
       <ListGroup>
-        {scrapeResult.articles.map((article) => articleItem(article))}
+        {scrapedPage.articles.map((article) => articleItem(article))}
       </ListGroup>
     </ListGroup.Item>
   );
 
   return (
     <Container>
-      {console.log(props)}
+      {console.log(`results component ${props.scrapeResults}`)}
       <ListGroup>
-        {props.scrapeResult
+        {props.scrapeResults
           ? props.scrapeResults.scrapedPages.map((scrapeResult) =>
               articleList(scrapeResult)
             )

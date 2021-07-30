@@ -7,7 +7,7 @@ const getScrapedPageData = async (targetUrl, subPageUrl) => {
   await axios.get(`${targetUrl}${subPageUrl}`).then((res) => {
     const $ = cheerio.load(res.data);
 
-    $("article").each((index, articleElement) => {
+    $("article").each((articleElement) => {
       const articleTitle = $(articleElement).find("h1").text();
       const articleUrl = $(articleElement).find("a").attr("href");
       const authorName = $(articleElement).find(".post-author").text();
@@ -39,16 +39,19 @@ const getScrapedPageData = async (targetUrl, subPageUrl) => {
   return scrapedPage;
 };
 
-export const getScrapedPages = async (numberOfPages) => {
-  if (!numberOfPages || typeof numberOfPages !== "number") {
-    throw new Error(`invalid input for number, got: ${numberOfPages}`);
+export const scrapeSitePages = async (targetUrlSubPageCollection) => {
+  if (
+    !targetUrlSubPageCollection ||
+    typeof targetUrlSubPageCollection !== "number"
+  ) {
+    throw new Error(
+      `invalid input for number, got: ${targetUrlSubPageCollection}`
+    );
   }
   const pages = [];
-  for (let index = 0; index < numberOfPages; index++) {
-    const page = await getScrapedPageData(
-      "https://blog.risingstack.com",
-      "/page/5/"
-    );
+  for (let index = 0; index < targetUrlSubPageCollection.length; index++) {
+    const page = await getScrapedPageData(targetUrlSubPageCollection[index]);
+    page.pageNumber = index;
     pages.push(page);
     //console.log(`page data: ${page}`);
   }

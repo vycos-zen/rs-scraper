@@ -1,4 +1,4 @@
-import { getOrCreateScrapedSiteInDb, disconnectFromMongoDb } from "./db.js";
+import { getOrCreateScrapedSiteInDb, disconnectFromMongoDb } from "./dal.js";
 
 import { collectionName } from "./models.js";
 

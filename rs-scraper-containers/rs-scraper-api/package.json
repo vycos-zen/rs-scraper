@@ -2,10 +2,10 @@
   "name": "rs-scraper-api",
   "version": "1.0.0",
   "description": "serve rs-scraper-ui",
-  "main": "src/index.js",
+  "main": "src/api.js",
   "type": "module",
   "scripts": {
-    "start": "nodemon --exec babel-node src/index.js",
+    "start": "node src/api.js",
     "test": "babel-node -e 'class Test { }'"
   },
   "author": "peterkollerlv",

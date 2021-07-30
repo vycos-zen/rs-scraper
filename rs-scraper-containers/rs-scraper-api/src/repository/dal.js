@@ -1,5 +1,5 @@
 import { ScrapedSite, collectionName } from "./models.js";
-import { getScrapedPages } from "../common/scraperService.js";
+import { scrapeSitePages } from "../common/scraperService.js";
 import mongoose from "mongoose";
 
 const contextMongoDb = { mongoose: null, db: null, contextCollection: null };
@@ -76,10 +76,10 @@ const incrementHitCount = async (siteId) => {
     .catch((err) => console.error(`error incrementing hitCount: ${err}`));
 };
 
-const updateScrapedPages = async (siteId, scrapedPages) => {
+const populateScrapedPagesInDb = async (siteId, scrapedPages) => {
   await connectToDatastore();
   const query = { _id: siteId };
-  const update = {
+  const populateScrapedPages = {
     $set: {
       scrapedPages: scrapedPages,
     },
@@ -87,7 +87,7 @@ const updateScrapedPages = async (siteId, scrapedPages) => {
   const options = { upsert: false };
 
   await contextMongoDb.contextCollection
-    .updateOne(query, update, options)
+    .updateOne(query, populateScrapedPages, options)
     .then((result) => {
       const { matchedCount, modifiedCount } = result;
       if (matchedCount && modifiedCount) {
@@ -109,42 +109,50 @@ export const getOrCreateScrapedSiteInDb = async (
       $or: [{ _id: siteId }, { targetUrl: targetUrl }],
     };
 
-    let scrapedSiteWithTargetUrl =
-      await contextMongoDb.contextCollection.findOne(locateSiteQuery);
+    const getSiteWithRequestedNumberOfPagesQuery = {
+      // scrapedPages.pageNumber is less than requested number of pages query
+      $or: [{ _id: siteId }, { targetUrl: targetUrl, scrapedPages.pageNumber }],
+    }; 
 
-    if (!scrapedSiteWithTargetUrl) {
+    let contextSite = await contextMongoDb.contextCollection.findOne(
+      locateSiteQuery
+    );
+
+    if (!contextSite) {
       if (!targetUrl) {
         throw new Error("targetUrl is mandatory when no id provided");
       }
-      scrapedSiteWithTargetUrl = await ScrapedSite.create({
+      reScrape = true;
+
+      contextSite = await ScrapedSite.create({
         targetUrl: targetUrl,
       });
-      console.log(`created new: ${scrapedSiteWithTargetUrl._id}`);
+      console.log(`created new: ${contextSite._id}`);
     }
 
-    incrementHitCount(scrapedSiteWithTargetUrl._id);
+    incrementHitCount(contextSite._id);
 
     console.log(`rescrape site: ${reScrape}`);
     if (reScrape) {
-      await scrape(scrapedSiteWithTargetUrl._id, numberOfPages);
+      await scrapeAndPopulate(contextSite._id, contextSite.targetUrl);
     }
 
-    scrapedSiteWithTargetUrl = await contextMongoDb.contextCollection.findOne(
+    contextSite = await contextMongoDb.contextCollection.findOne(
       locateSiteQuery
     );
 
     console.log(
-      `returning site: ${scrapedSiteWithTargetUrl._id}, hitcount ${scrapedSiteWithTargetUrl.hitCount}`
+      `returning site: ${contextSite._id}, hitcount ${contextSite.hitCount}`
     );
 
-    return scrapedSiteWithTargetUrl;
+    return contextSite;
   } catch (e) {
     console.log(`error - getOrCreateScrapedSite: ${e.message}`);
     return e.message;
   }
 };
 
-export const scrape = async (siteId, numberOfPages) => {
+export const scrapeAndPopulate = async (siteId, targetUrl) => {
   const query = { _id: siteId };
   const dropPages = {
     $set: {
@@ -161,8 +169,17 @@ export const scrape = async (siteId, numberOfPages) => {
       }
     })
     .then(async () => {
-      const scrapedPages = await getScrapedPages(numberOfPages);
-      await updateScrapedPages(siteId, scrapedPages);
+      // possibly refactor to an available sub page discovery logic
+      const targetUrlSubPageCollection = Array.from(
+        `${targetUrl}`,
+        `${targetUrl}/page/2/`,
+        `${targeturl}/page/3/`,
+        `${targeturl}/page/4/`,
+        `${targeturl}/page/5/`
+      );
+
+      const scrapedPages = await scrapeSitePages(targetUrlSubPageCollection);
+      await populateScrapedPagesInDb(siteId, scrapedPages);
     })
     .catch((err) => console.error(`failed to droped pages: ${err}`));
 };
