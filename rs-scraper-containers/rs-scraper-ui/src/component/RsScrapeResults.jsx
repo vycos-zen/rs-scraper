@@ -1,37 +1,43 @@
 import React from "react";
-import { Container, ListGroup } from "react-bootstrap";
+import { Container, ListGroup, Card, Button } from "react-bootstrap";
 
 export function RsScrapeResults({ props }) {
   const articleItem = (articleData) => (
     <ListGroup.Item key={articleData._id}>
-      <span>
-        id: {articleData._id}
-        {articleData.title}
-      </span>
-      <a href={articleData.articleUrl}>{articleData.articleUrl}</a>
+      <Card style={{ width: "48rem" }}>
+        <Card.Body>
+          <Card.Title>{articleData.title}</Card.Title>
+          <Card.Text>by {articleData.authorName}</Card.Text>
+          <Card.Text>{articleData.description}</Card.Text>
+          <Button variant="link" href={articleData.articleUrl}>
+            {articleData.articleUrl}
+          </Button>
+        </Card.Body>
+      </Card>
     </ListGroup.Item>
   );
 
   const articleList = (scrapedPage) => (
     <ListGroup.Item key={scrapedPage._id}>
-      <span>
-        page #: {scrapedPage.pageNumber}
-        id: {scrapedPage._id}
-      </span>
-      <ListGroup>
-        {scrapedPage.articles.map((article) => articleItem(article))}
-      </ListGroup>
+      <Card style={{ width: "52rem" }}>
+        <Card.Body>
+          <Card.Title>page #: {scrapedPage.pageNumber}</Card.Title>
+          <ListGroup>
+            {scrapedPage.articles.map((article) => articleItem(article))}
+          </ListGroup>
+        </Card.Body>
+      </Card>
     </ListGroup.Item>
   );
 
   return (
-    <Container>
+    <>
       <ListGroup>
         {props.scrapeResults.scrapedPages &&
           props.scrapeResults.scrapedPages.map((scrapeResult) =>
             articleList(scrapeResult)
           )}
       </ListGroup>
-    </Container>
+    </>
   );
 }

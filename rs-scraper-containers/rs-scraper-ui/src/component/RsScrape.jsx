@@ -28,7 +28,9 @@ export function RsScrape() {
           articles {
             _id
             title
+            authorName
             articleUrl
+            description
           }
         }
       }
