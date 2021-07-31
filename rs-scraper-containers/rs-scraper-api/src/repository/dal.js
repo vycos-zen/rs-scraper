@@ -97,6 +97,18 @@ const populateScrapedPagesInDb = async (siteId, scrapedPages) => {
     .catch((err) => console.error(`failed to update scrapedPages: ${err}`));
 };
 
+export const getNumberOfAvailablePagesInDb = async (siteId) => {
+  await connectToDatastore();
+
+  const getNumberOfAvailablePagesQuery = { _id: siteId };
+
+  let contextSite = await contextMongoDb.contextCollection.findOne(
+    getNumberOfAvailablePagesQuery
+  );
+
+  return contextSite ? contextSite.pageCount : 0;
+};
+
 export const getOrCreateScrapedSiteInDb = async (
   siteId,
   targetUrl,
@@ -111,8 +123,17 @@ export const getOrCreateScrapedSiteInDb = async (
 
     const getSiteWithRequestedNumberOfPagesQuery = {
       // scrapedPages.pageNumber is less than requested number of pages query
-      $or: [{ _id: siteId }, { targetUrl: targetUrl, scrapedPages.pageNumber }],
-    }; 
+      $or: [
+        {
+          _id: siteId,
+          "scrapedPages.pageNumber": { $lte: numberOfPages },
+        },
+        {
+          targetUrl: targetUrl,
+          "scrapedPages.pageNumber": { $lte: numberOfPages },
+        },
+      ],
+    };
 
     let contextSite = await contextMongoDb.contextCollection.findOne(
       locateSiteQuery
@@ -138,11 +159,11 @@ export const getOrCreateScrapedSiteInDb = async (
     }
 
     contextSite = await contextMongoDb.contextCollection.findOne(
-      locateSiteQuery
+      getSiteWithRequestedNumberOfPagesQuery
     );
 
     console.log(
-      `returning site: ${contextSite._id}, hitcount ${contextSite.hitCount}`
+      `returning site: ${contextSite._id}, hitcount ${contextSite.hitCount}, persisted pages count: ${contextSite.scrapedPages.length} / requested: ${numberOfPages} / returning: ${contextSite.scrapedPages.length}`
     );
 
     return contextSite;
@@ -153,12 +174,22 @@ export const getOrCreateScrapedSiteInDb = async (
 };
 
 export const scrapeAndPopulate = async (siteId, targetUrl) => {
+  // possibly refactor to return scraped pages without persistation
   const query = { _id: siteId };
   const dropPages = {
     $set: {
       scrapedPages: [],
     },
   };
+
+  // possibly refactor to an available sub page discovery logic
+  const targetUrlSubPageCollection = Array.from([
+    `${targetUrl}`,
+    `${targetUrl}/page/2/`,
+    `${targetUrl}/page/3/`,
+    `${targetUrl}/page/4/`,
+    `${targetUrl}/page/5/`,
+  ]);
 
   await contextMongoDb.contextCollection
     .updateOne(query, dropPages)
@@ -169,16 +200,8 @@ export const scrapeAndPopulate = async (siteId, targetUrl) => {
       }
     })
     .then(async () => {
-      // possibly refactor to an available sub page discovery logic
-      const targetUrlSubPageCollection = Array.from(
-        `${targetUrl}`,
-        `${targetUrl}/page/2/`,
-        `${targeturl}/page/3/`,
-        `${targeturl}/page/4/`,
-        `${targeturl}/page/5/`
-      );
-
       const scrapedPages = await scrapeSitePages(targetUrlSubPageCollection);
+
       await populateScrapedPagesInDb(siteId, scrapedPages);
     })
     .catch((err) => console.error(`failed to droped pages: ${err}`));

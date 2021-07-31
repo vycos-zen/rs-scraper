@@ -5,7 +5,7 @@
   "main": "src/api.js",
   "type": "module",
   "scripts": {
-    "start": "node src/api.js",
+    "start": "nodemon src/api.js",
     "test": "babel-node -e 'class Test { }'"
   },
   "author": "peterkollerlv",

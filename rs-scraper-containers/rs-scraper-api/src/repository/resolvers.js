@@ -1,12 +1,15 @@
-import { getOrCreateScrapedSiteInDb, disconnectFromMongoDb } from "./dal.js";
-
-import { collectionName } from "./models.js";
+import {
+  getOrCreateScrapedSiteInDb,
+  disconnectFromMongoDb,
+  getNumberOfAvailablePagesInDb,
+} from "./dal.js";
 
 export const resolvers = {
   Query: {
     hello: () => "helloo",
-    targetUrl: async (siteID) => {
-      const db = await mongoDb();
+    targetUrl: async (_, { siteId }) => {
+      return "unavailable";
+      /*       const db = await mongoDb();
       let scrapedSiteTargetUrlWithId = await db
         .collection(collectionName)
         .findOne({
@@ -15,10 +18,15 @@ export const resolvers = {
 
       return scrapedSiteTargetUrlWithId
         ? scrapedSiteTargetUrlWithId
-        : "Site does not exists.";
+        : "Site does not exists."; */
     },
-    getScrapedPages: (siteId, numberOfPages) => {
-      return null;
+    getNumberOfAvailablePages: async (_, { siteId }) => {
+      const numberOfAvailablePages = await getNumberOfAvailablePagesInDb(
+        siteId
+      );
+
+      return 2;
+      //return numberOfAvailablePages;
     },
   },
   Mutation: {

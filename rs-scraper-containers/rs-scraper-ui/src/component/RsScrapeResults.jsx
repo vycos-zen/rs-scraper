@@ -1,6 +1,5 @@
 import React from "react";
 import { Container, ListGroup } from "react-bootstrap";
-import { nanoid } from "nanoid";
 
 export function RsScrapeResults({ props }) {
   const articleItem = (articleData) => (
@@ -21,13 +20,11 @@ export function RsScrapeResults({ props }) {
 
   return (
     <Container>
-      {console.log(`results component ${props.scrapeResults}`)}
       <ListGroup>
-        {props.scrapeResults
-          ? props.scrapeResults.scrapedPages.map((scrapeResult) =>
-              articleList(scrapeResult)
-            )
-          : null}
+        {props.scrapeResults.scrapedPages &&
+          props.scrapeResults.scrapedPages.map((scrapeResult) =>
+            articleList(scrapeResult)
+          )}
       </ListGroup>
     </Container>
   );

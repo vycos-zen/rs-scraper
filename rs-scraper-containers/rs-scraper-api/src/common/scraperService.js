@@ -2,24 +2,25 @@ import { ScrapedPage, ScrapedArticle } from "../repository/models.js";
 import axios from "axios";
 import cheerio from "cheerio";
 
-const getScrapedPageData = async (targetUrl, subPageUrl) => {
+const getScrapedPageData = async (url) => {
   const articles = [];
-  await axios.get(`${targetUrl}${subPageUrl}`).then((res) => {
+  await axios.get(url).then((res) => {
     const $ = cheerio.load(res.data);
 
-    $("article").each((articleElement) => {
+    $("article").each((index, articleElement) => {
       const articleTitle = $(articleElement).find("h1").text();
       const articleUrl = $(articleElement).find("a").attr("href");
       const authorName = $(articleElement).find(".post-author").text();
       const postContent = $(articleElement).find(".post-content").text();
 
-      console.log({
+      /* console.log({
         articleTitle,
         articleUrl,
         authorName,
         authorName,
         postContent,
-      });
+      }); */
+
       const article = new ScrapedArticle({
         title: articleTitle,
         articleUrl: articleUrl,
@@ -31,7 +32,6 @@ const getScrapedPageData = async (targetUrl, subPageUrl) => {
   });
 
   const scrapedPage = new ScrapedPage({
-    pageNumber: 0,
     articleCount: articles.length,
     articles: articles,
   });
@@ -40,23 +40,18 @@ const getScrapedPageData = async (targetUrl, subPageUrl) => {
 };
 
 export const scrapeSitePages = async (targetUrlSubPageCollection) => {
-  if (
-    !targetUrlSubPageCollection ||
-    typeof targetUrlSubPageCollection !== "number"
-  ) {
+  if (!targetUrlSubPageCollection) {
     throw new Error(
-      `invalid input for number, got: ${targetUrlSubPageCollection}`
+      `invalid input for targetUrlSubPageCollection, got: ${targetUrlSubPageCollection}`
     );
   }
+  console.log(`scraping: ${JSON.stringify(targetUrlSubPageCollection)}`);
   const pages = [];
   for (let index = 0; index < targetUrlSubPageCollection.length; index++) {
     const page = await getScrapedPageData(targetUrlSubPageCollection[index]);
-    page.pageNumber = index;
+    page.pageNumber = index + 1;
     pages.push(page);
-    //console.log(`page data: ${page}`);
   }
-
-  //console.log(`pages: ${pages}`);
 
   return pages;
 };

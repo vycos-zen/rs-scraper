@@ -32,7 +32,7 @@ export const typeDefs = gql`
   type Query {
     hello: String
     targetUrl(siteId: ID): String
-    getScrapedPages(siteId: ID, numberOfPages: Int): [ScrapedPage]
+    getNumberOfAvailablePages(siteId: ID): Int
   }
 
   type Mutation {

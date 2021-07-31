@@ -50,6 +50,7 @@ export function RsScrapeInput({ props }) {
   const clearQuery = () => {
     clearButtonRef.current.blur();
     setNumberOfPagesToQuery(0);
+    props.clearResults();
     props.setNumberOfPages(0);
   };
 
