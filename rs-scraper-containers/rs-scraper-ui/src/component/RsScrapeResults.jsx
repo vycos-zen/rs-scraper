@@ -4,14 +4,20 @@ import { Container, ListGroup } from "react-bootstrap";
 export function RsScrapeResults({ props }) {
   const articleItem = (articleData) => (
     <ListGroup.Item key={articleData._id}>
-      <span>{articleData.title}</span>
+      <span>
+        id: {articleData._id}
+        {articleData.title}
+      </span>
       <a href={articleData.articleUrl}>{articleData.articleUrl}</a>
     </ListGroup.Item>
   );
 
   const articleList = (scrapedPage) => (
     <ListGroup.Item key={scrapedPage._id}>
-      <span>Page: {scrapedPage.pageNumber}</span>
+      <span>
+        page #: {scrapedPage.pageNumber}
+        id: {scrapedPage._id}
+      </span>
       <ListGroup>
         {scrapedPage.articles.map((article) => articleItem(article))}
       </ListGroup>

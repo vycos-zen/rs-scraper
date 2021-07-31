@@ -17,12 +17,14 @@ export const typeDefs = gql`
   }
 
   type ScrapedPage {
+    _id: ID!
     pageNumber: Int!
     articleCount: Int
     articles: [ScrapedArticle]
   }
 
   type ScrapedArticle {
+    _id: ID!
     title: String
     articleUrl: String
     authorName: String

@@ -22,9 +22,11 @@ export function RsScrape() {
         hitCount
         pageCount
         scrapedPages {
+          _id
           pageNumber
           articleCount
           articles {
+            _id
             title
             articleUrl
           }

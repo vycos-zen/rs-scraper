@@ -123,16 +123,11 @@ export const getOrCreateScrapedSiteInDb = async (
 
     const getSiteWithRequestedNumberOfPagesQuery = {
       // scrapedPages.pageNumber is less than requested number of pages query
-      $or: [
-        {
-          _id: siteId,
-          "scrapedPages.pageNumber": { $lte: numberOfPages },
-        },
-        {
-          targetUrl: targetUrl,
-          "scrapedPages.pageNumber": { $lte: numberOfPages },
-        },
-      ],
+      pageNumber: { $lte: numberOfPages },
+
+      /*  _id: siteId,
+      scrapedPages: {
+      }, */
     };
 
     let contextSite = await contextMongoDb.contextCollection.findOne(
@@ -158,9 +153,19 @@ export const getOrCreateScrapedSiteInDb = async (
       await scrapeAndPopulate(contextSite._id, contextSite.targetUrl);
     }
 
-    contextSite = await contextMongoDb.contextCollection.findOne(
-      getSiteWithRequestedNumberOfPagesQuery
-    );
+    try {
+      console.log(`typeof contextsite: ${Object.keys(contextSite)}`);
+      contextSite.scrapedPages = contextSite.scrapedPages.filter(
+        (p) => p.pageNumber <= numberOfPages
+      );
+
+      /*   await contextSite.scrapedPages.filter(
+        getSiteWithRequestedNumberOfPagesQuery
+        );
+       */
+    } catch (err) {
+      console.error(`error on filter pages: ${err.message}`);
+    }
 
     console.log(
       `returning site: ${contextSite._id}, hitcount ${contextSite.hitCount}, persisted pages count: ${contextSite.scrapedPages.length} / requested: ${numberOfPages} / returning: ${contextSite.scrapedPages.length}`
