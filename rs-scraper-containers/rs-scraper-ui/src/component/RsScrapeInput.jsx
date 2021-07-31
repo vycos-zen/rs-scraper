@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Button, Container, Form } from "react-bootstrap";
+import { Button, Container, Form, InputGroup } from "react-bootstrap";
 
 export function RsScrapeInput({ props }) {
   const [numberOfPagesToQuery, setNumberOfPagesToQuery] = useState(0);
@@ -62,16 +62,19 @@ export function RsScrapeInput({ props }) {
             Please specify the number of pages to scrape from 1-
             {maxPageCount}:
           </Form.Label>
-          <Form.Control
-            name="numberOfPages"
-            ref={numberOfPagesRef}
-            type="number"
-            value={numberOfPagesToQuery}
-            onChange={(e) => setNumberOfPagesToQuery(e.target.value)}
-            onBlur={(e) => setNumberOfPagesToQuery(e.target.value)}
-            placeholder="0"
-            required={true}
-          />
+          <InputGroup className="mb-3">
+            <InputGroup.Text># of pages</InputGroup.Text>
+            <Form.Control
+              name="numberOfPages"
+              ref={numberOfPagesRef}
+              type="number"
+              value={numberOfPagesToQuery}
+              onChange={(e) => setNumberOfPagesToQuery(e.target.value)}
+              onBlur={(e) => setNumberOfPagesToQuery(e.target.value)}
+              placeholder="0"
+              required={true}
+            />
+          </InputGroup>
           <Form.Control.Feedback type="invalid">
             Expecting a number between 1 - {maxPageCount}
           </Form.Control.Feedback>

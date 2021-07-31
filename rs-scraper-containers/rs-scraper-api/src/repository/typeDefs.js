@@ -34,7 +34,7 @@ export const typeDefs = gql`
   type Query {
     hello: String
     targetUrl(siteId: ID): String
-    getNumberOfAvailablePages(siteId: ID): Int
+    getNumberOfAvailablePages(siteId: ID): Int!
   }
 
   type Mutation {
