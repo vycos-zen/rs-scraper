@@ -1,6 +1,7 @@
 import {
-  getOrCreateScrapedSiteInDb,
+  connectToDatastore,
   disconnectFromMongoDb,
+  getOrCreateScrapedSiteInDb,
   getNumberOfAvailablePagesInDb,
 } from "./dal.js";
 
@@ -20,13 +21,15 @@ export const resolvers = {
         ? scrapedSiteTargetUrlWithId
         : "Site does not exists."; */
     },
-    getNumberOfAvailablePages: async (_, { siteId }) => {
-      const numberOfAvailablePages = await getNumberOfAvailablePagesInDb(
-        siteId
-      );
+    getNumberOfAvailablePages: async (_, { siteId: _id }) => {
+      await connectToDatastore().than(async () => {
+        const numberOfAvailablePages = await getNumberOfAvailablePagesInDb(
+          siteId
+        );
 
-      return 2;
-      //return numberOfAvailablePages;
+        //return 2;
+        return numberOfAvailablePages;
+      });
     },
   },
   Mutation: {
@@ -35,15 +38,17 @@ export const resolvers = {
         `getOrCreate with id: ${input._id}, targetUrl: ${input.targetUrl}`
       );
 
-      const scrapedSite = await getOrCreateScrapedSiteInDb(
-        input._id,
-        input.targetUrl,
-        input.reScrape,
-        input.numberOfPages
-      );
-      await disconnectFromMongoDb();
+      await connectToDatastore().than(async () => {
+        const scrapedSite = await getOrCreateScrapedSiteInDb(
+          input._id,
+          input.targetUrl,
+          input.reScrape,
+          input.numberOfPages
+        );
+        //await disconnectFromMongoDb();
 
-      return scrapedSite;
+        return scrapedSite;
+      });
     },
   },
 };

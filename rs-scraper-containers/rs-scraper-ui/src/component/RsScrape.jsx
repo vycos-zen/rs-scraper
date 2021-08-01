@@ -43,9 +43,9 @@ export function RsScrape() {
     }
   `;
 
-  const [getNumberOfAvailablePages, numberOfAvailablePagesData] = useQuery(
-    getNumberOfAvailablePagesQuery
-  );
+  const numberOfAvailablePagesData = useQuery(getNumberOfAvailablePagesQuery, {
+    variables: { siteId: siteId },
+  });
 
   const [getOrCreateScrapedSite, getOrCreateScrapedSiteData] = useMutation(
     getOrCreateScrapedSiteQuery
@@ -111,7 +111,7 @@ export function RsScrape() {
         } else {
           console.log(`site id query, id: ${siteId}`);
           if (siteId) {
-            await getNumberOfAvailablePages({ siteId: siteId })
+            /*   await getNumberOfAvailablePages({ siteId: siteId })
               .then((result) => {
                 console.log(
                   `get number of available pages query result: ${JSON.stringify(
@@ -124,7 +124,7 @@ export function RsScrape() {
                 console.log(
                   `error in getAvailablePages -> getNumberOfAvailablePages: ${error.message}`
                 );
-              });
+              }); */
           }
         }
       } catch (error) {
@@ -143,7 +143,7 @@ export function RsScrape() {
     <Container>
       <span>
         number of available pages:{" "}
-        {numberOfAvailablePagesData &&
+        {numberOfAvailablePagesData.data &&
           numberOfAvailablePagesData.data.getNumberOfAvailablePages}
       </span>
       <RsScrapeInput

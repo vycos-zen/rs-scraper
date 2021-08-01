@@ -4,7 +4,11 @@ import mongoose from "mongoose";
 
 const contextMongoDb = { mongoose: null, db: null, contextCollection: null };
 
-const connectToDatastore = async () => {
+export const connectToDatastore = async () => {
+  if (contextMongoDb.db) {
+    return contextMongoDb.db;
+  }
+
   contextMongoDb.mongoose = mongoose;
 
   const config = {
@@ -17,6 +21,7 @@ const connectToDatastore = async () => {
     cluster: process.env.MONGO_CLUSTER,
     domain: process.env.MONGO_DOMAIN,
   };
+
   const uri = config.mongoServer.includes("+srv")
     ? `${config.mongoServer}${config.mongoUsr}:${config.mongoSecret}@${config.cluster}${config.domain}/${config.mongoDb}?retryWrites=true&w=majority`
     : `
@@ -77,7 +82,6 @@ const incrementHitCount = async (siteId) => {
 };
 
 const populateScrapedPagesInDb = async (siteId, scrapedPages) => {
-  await connectToDatastore();
   const query = { _id: siteId };
   const populateScrapedPages = {
     $set: {
@@ -98,8 +102,6 @@ const populateScrapedPagesInDb = async (siteId, scrapedPages) => {
 };
 
 export const getNumberOfAvailablePagesInDb = async (siteId) => {
-  await connectToDatastore();
-
   const getNumberOfAvailablePagesQuery = { _id: siteId };
 
   let contextSite = await contextMongoDb.contextCollection.findOne(
@@ -116,18 +118,8 @@ export const getOrCreateScrapedSiteInDb = async (
   numberOfPages
 ) => {
   try {
-    await connectToDatastore();
     const locateSiteQuery = {
       $or: [{ _id: siteId }, { targetUrl: targetUrl }],
-    };
-
-    const getSiteWithRequestedNumberOfPagesQuery = {
-      // scrapedPages.pageNumber is less than requested number of pages query
-      pageNumber: { $lte: numberOfPages },
-
-      /*  _id: siteId,
-      scrapedPages: {
-      }, */
     };
 
     let contextSite = await contextMongoDb.contextCollection.findOne(
@@ -158,11 +150,6 @@ export const getOrCreateScrapedSiteInDb = async (
       contextSite.scrapedPages = contextSite.scrapedPages.filter(
         (p) => p.pageNumber <= numberOfPages
       );
-
-      /*   await contextSite.scrapedPages.filter(
-        getSiteWithRequestedNumberOfPagesQuery
-        );
-       */
     } catch (err) {
       console.error(`error on filter pages: ${err.message}`);
     }

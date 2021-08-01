@@ -3,7 +3,7 @@ import { gql } from "apollo-server-express";
 export const typeDefs = gql`
   type ScrapedSite {
     _id: ID!
-    targetUrl: String!
+    targetUrl: String
     hitCount: Int
     pageCount: Int
     scrapedPages: [ScrapedPage]
@@ -34,7 +34,7 @@ export const typeDefs = gql`
   type Query {
     hello: String
     targetUrl(siteId: ID): String
-    getNumberOfAvailablePages(siteId: ID): Int!
+    getNumberOfAvailablePages(siteId: ID!): Int
   }
 
   type Mutation {
