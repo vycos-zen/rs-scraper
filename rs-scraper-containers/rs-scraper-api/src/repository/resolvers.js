@@ -1,5 +1,6 @@
 import {
-  connectToDatastore,
+  dropCache,
+  scrapeTargetSite,
   disconnectFromMongoDb,
   getOrCreateScrapedSiteInDb,
   getNumberOfAvailablePagesInDb,
@@ -21,15 +22,22 @@ export const resolvers = {
         ? scrapedSiteTargetUrlWithId
         : "Site does not exists."; */
     },
-    getNumberOfAvailablePages: async (_, { siteId: _id }) => {
-      await connectToDatastore().than(async () => {
-        const numberOfAvailablePages = await getNumberOfAvailablePagesInDb(
-          siteId
+    getNumberOfAvailablePages: async (_, { input }) => {
+      try {
+        console.log(
+          `getNumberOfAvailablePages input: { siteId: ${input._id}, targetUrl: ${input.targetUrl} }`
         );
-
-        //return 2;
-        return numberOfAvailablePages;
-      });
+        const numberOfAvailablePages = await getNumberOfAvailablePagesInDb(
+          input._id,
+          input.targetUrl
+        );
+        if (numberOfAvailablePages) {
+          console.log(`number of available pages: ${numberOfAvailablePages}`);
+          return numberOfAvailablePages;
+        }
+      } catch (error) {
+        console.error(`error on getNumberOfAvailablePages: ${error.message}`);
+      }
     },
   },
   Mutation: {
@@ -37,18 +45,44 @@ export const resolvers = {
       console.log(
         `getOrCreate with id: ${input._id}, targetUrl: ${input.targetUrl}`
       );
-
-      await connectToDatastore().than(async () => {
-        const scrapedSite = await getOrCreateScrapedSiteInDb(
+      if (input.persistToCache) {
+        getOrCreateScrapedSiteInDb(
           input._id,
           input.targetUrl,
-          input.reScrape,
           input.numberOfPages
-        );
-        //await disconnectFromMongoDb();
+        )
+          .then((scrapedSite) => {
+            const site = scrapedSite;
+            console.log(`scraped site mutation with persist: ${scrapedSite}`);
+            return site;
+          })
+          .catch((error) => {
+            console.error(
+              `error on getOrCreateScrapedSiteInDb: ${error.message}`
+            );
+          });
+      } else {
+        //dropCache();
+        scrapeTargetSite(targetUrl)
+          .then((scrapedPages) => {
+            const filteredPages = scrapedPages.filter(
+              (p) => p.pageNumber <= numberOfPages
+            );
 
-        return scrapedSite;
-      });
+            const scrapedSite = {
+              targetUrl: input.targetUrl,
+              hitCount: 1,
+              pageCount: filteredPages.length,
+              scrapedPages: filteredPages.data,
+            };
+
+            return scrapedSite;
+          })
+          .catch((error) => {
+            console.log(`error on scrapeTargetSite: ${error.message}`);
+            return null;
+          });
+      }
     },
   },
 };

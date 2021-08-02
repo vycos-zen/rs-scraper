@@ -1,0 +1,12 @@
+{
+    "configurations": [
+        {
+        "name": "npm run start",
+        "type": "node",
+        "request": "launch",
+        "cwd": "${workspaceFolder}/rs-scraper-containers/rs-scraper-api/",
+        "runtimeExecutable": "npm",
+        "runtimeArgs": ["run-script", "start"]
+        }
+    ]
+}

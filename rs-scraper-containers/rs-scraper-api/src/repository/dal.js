@@ -2,15 +2,45 @@ import { ScrapedSite, collectionName } from "./models.js";
 import { scrapeSitePages } from "../common/scraperService.js";
 import mongoose from "mongoose";
 
-const contextMongoDb = { mongoose: null, db: null, contextCollection: null };
+const dataStoreContext = { db: null, mongoose: null, contextCollection: null };
 
-export const connectToDatastore = async () => {
-  if (contextMongoDb.db) {
-    return contextMongoDb.db;
+const getDataStoreContext = async () => {
+  if (
+    dataStoreContext.db &&
+    dataStoreContext.mongoose &&
+    dataStoreContext.contextCollection
+  ) {
+    return new Promise((resolve) => {
+      resolve(dataStoreContext);
+    });
   }
 
-  contextMongoDb.mongoose = mongoose;
+  let contextDb;
+  let contextCollection;
+  let contextDataSourceError;
 
+  try {
+    contextDb = await connectToDatastore();
+    contextCollection = contextDb.db.collection(collectionName);
+  } catch (error) {
+    contextDataSourceError = error;
+  }
+
+  return new Promise((resolve, reject) => {
+    if (contextDb.db && contextDb.contextCollection) {
+      dataStoreContext.db = contextDb.db;
+      dataStoreContext.mongoose = contextDb.mongoose;
+      dataStoreContext.contextCollection = contextCollection;
+
+      resolve(dataStoreContext);
+    } else {
+      reject(contextDataSourceError);
+    }
+  });
+};
+
+const connectToDatastore = () => {
+  const contextMongoose = mongoose;
   const config = {
     mongoServer: process.env.MONGO_SERVER,
     mongoDbPort: process.env.MONGO_PORT,
@@ -30,129 +60,143 @@ export const connectToDatastore = async () => {
   console.log(`connecting to mongodb environment: ${config.mongoEnv}`);
 
   try {
-    contextMongoDb.db = contextMongoDb.mongoose.connection;
+    const db = contextMongoose.connection;
 
-    contextMongoDb.mongoose.connect(uri, {
+    contextMongoose.connect(uri, {
       useNewUrlParser: true,
       useFindAndModify: false,
       useUnifiedTopology: true,
       useCreateIndex: true,
     });
 
-    contextMongoDb.db.once("open", async () => {
-      contextMongoDb.contextCollection =
-        contextMongoDb.db.collection(collectionName);
-      if (contextMongoDb.contextCollection) {
-        console.log(
-          `connected to mongodb collection: ${contextMongoDb.contextCollection.collection.collectionName}`
-        );
-      }
+    db.once("open", () => {
+      console.log("connected to mongodb");
+      return new Promise((resolve, reject) => {
+        resolve({ db: db, mongoose: contextMongoose });
+      });
     });
 
-    contextMongoDb.db.on("error", () => {
-      console.log("error connecting to mongodb");
+    db.on("error", (error) => {
+      return new Promise((resolve, reject) => {
+        reject(`error connecting to mongodb: ${error.message}`);
+      });
     });
-    return contextMongoDb.db;
   } catch (error) {
-    console.log("error on connectToDatastore");
+    return new Promise((resolve, reject) => {
+      reject(`error on connectToDatastore: ${error.message}`);
+    });
   }
 };
 
 export const disconnectFromMongoDb = () => {
-  if (!contextMongoDb.db) {
+  if (!contextDataSource.db) {
     return;
   }
-  contextMongoDb.mongoose.disconnect();
+  contextDataSource.mongoose.disconnect();
+};
+
+const locateSite = async (siteId, targetUrl) => {
+  let contextSiteDocument;
+  let locateSiteError;
+
+  try {
+    const locateSiteQuery = {
+      $or: [{ _id: siteId }, { targetUrl: targetUrl }],
+    };
+    console.log(
+      `contextDataSource at locateSite: ${Object.keys(dataStoreContext)}`
+    );
+    await getDataStoreContext();
+
+    await dataStoreContext.contextCollection
+      .findOne(locateSiteQuery)
+      .then((result) => {
+        contextSiteDocument = result.data;
+      })
+      .catch((error) => {
+        locateSiteError = error;
+      });
+  } catch (error) {
+    locateSiteError = error;
+  }
+
+  return new Promise((resolve, reject) => {
+    if (contextSiteDocument) {
+      resolve(contextSiteDocument);
+    } else if (locateSiteError) {
+      reject(locateSiteError);
+    } else {
+      reject(new Error(`unable to locate site...`));
+    }
+  });
 };
 
 const incrementHitCount = async (siteId) => {
-  const query = { _id: siteId };
-  const incrementHitCount = {
-    $inc: { hitCount: 1 },
-  };
-  await contextMongoDb.contextCollection
-    .updateOne(query, incrementHitCount)
-    .then((result) => {
-      const { matchedCount, modifiedCount } = result;
-      if (matchedCount && modifiedCount) {
-        console.log(`incremented hitCount`);
-      }
-    })
-    .catch((err) => console.error(`error incrementing hitCount: ${err}`));
+  try {
+    const contextSite = await locateSite(siteId, null);
+    const query = { _id: contextSite._id };
+    const incrementHitCount = {
+      $inc: { hitCount: 1 },
+    };
+
+    await contextDataSource.contextCollection
+      .updateOne(query, incrementHitCount)
+      .then((result) => {
+        const { matchedCount, modifiedCount } = result;
+        if (matchedCount && modifiedCount) {
+          console.log(`incremented hitCount`);
+        }
+      });
+  } catch (err) {
+    console.error(`error incrementing hitCount: ${err}`);
+  }
 };
 
-const populateScrapedPagesInDb = async (siteId, scrapedPages) => {
-  const query = { _id: siteId };
-  const populateScrapedPages = {
-    $set: {
-      scrapedPages: scrapedPages,
-    },
-  };
-  const options = { upsert: false };
+export const getNumberOfAvailablePagesInDb = async (siteId, targetUrl) => {
+  try {
+    const contextSite = await locateSite(siteId, targetUrl);
 
-  await contextMongoDb.contextCollection
-    .updateOne(query, populateScrapedPages, options)
-    .then((result) => {
-      const { matchedCount, modifiedCount } = result;
-      if (matchedCount && modifiedCount) {
-        console.log(`successfully updated scrapedPages.`);
-      }
-    })
-    .catch((err) => console.error(`failed to update scrapedPages: ${err}`));
-};
-
-export const getNumberOfAvailablePagesInDb = async (siteId) => {
-  const getNumberOfAvailablePagesQuery = { _id: siteId };
-
-  let contextSite = await contextMongoDb.contextCollection.findOne(
-    getNumberOfAvailablePagesQuery
-  );
-
-  return contextSite ? contextSite.pageCount : 0;
+    if (contextSite) {
+      return new Promise((resolve, reject) => {
+        resolve(contextSite.pageCount);
+      });
+    }
+  } catch (error) {
+    return new Promise((resolve, reject) => {
+      reject(error);
+    });
+  }
 };
 
 export const getOrCreateScrapedSiteInDb = async (
   siteId,
   targetUrl,
-  reScrape,
   numberOfPages
 ) => {
   try {
-    const locateSiteQuery = {
-      $or: [{ _id: siteId }, { targetUrl: targetUrl }],
-    };
-
-    let contextSite = await contextMongoDb.contextCollection.findOne(
-      locateSiteQuery
-    );
+    let contextSite = await locateSite(siteId, targetUrl);
 
     if (!contextSite) {
       if (!targetUrl) {
         throw new Error("targetUrl is mandatory when no id provided");
       }
-      reScrape = true;
-
+      const scrapedPages = scrapeTargetSite(targetUrl);
       contextSite = await ScrapedSite.create({
         targetUrl: targetUrl,
+        hitCount: 1,
+        pageCount: scrapedPages.length,
+        scrapedPages: scrapedPages,
       });
       console.log(`created new: ${contextSite._id}`);
     }
-
-    incrementHitCount(contextSite._id);
-
-    console.log(`rescrape site: ${reScrape}`);
-    if (reScrape) {
-      await scrapeAndPopulate(contextSite._id, contextSite.targetUrl);
+    {
+      incrementHitCount(contextSite._id);
     }
 
-    try {
-      console.log(`typeof contextsite: ${Object.keys(contextSite)}`);
-      contextSite.scrapedPages = contextSite.scrapedPages.filter(
-        (p) => p.pageNumber <= numberOfPages
-      );
-    } catch (err) {
-      console.error(`error on filter pages: ${err.message}`);
-    }
+    console.log(`typeof contextsite: ${Object.keys(contextSite)}`);
+    contextSite.scrapedPages = contextSite.scrapedPages.filter(
+      (p) => p.pageNumber <= numberOfPages
+    );
 
     console.log(
       `returning site: ${contextSite._id}, hitcount ${contextSite.hitCount}, persisted pages count: ${contextSite.scrapedPages.length} / requested: ${numberOfPages} / returning: ${contextSite.scrapedPages.length}`
@@ -165,8 +209,7 @@ export const getOrCreateScrapedSiteInDb = async (
   }
 };
 
-export const scrapeAndPopulate = async (siteId, targetUrl) => {
-  // possibly refactor to return scraped pages without persistation
+export const dropCache = async (siteId) => {
   const query = { _id: siteId };
   const dropPages = {
     $set: {
@@ -174,6 +217,18 @@ export const scrapeAndPopulate = async (siteId, targetUrl) => {
     },
   };
 
+  contextMongoDb.contextCollection
+    .updateOne(query, dropPages)
+    .then((result) => {
+      const { matchedCount, modifiedCount } = result;
+      if (matchedCount && modifiedCount) {
+        console.log(`successfully dropped pages`);
+      }
+    })
+    .catch((err) => console.error(`failed to droped pages: ${err}`));
+};
+
+export const scrapeTargetSite = async (targetUrl) => {
   // possibly refactor to an available sub page discovery logic
   const targetUrlSubPageCollection = Array.from([
     `${targetUrl}`,
@@ -183,18 +238,21 @@ export const scrapeAndPopulate = async (siteId, targetUrl) => {
     `${targetUrl}/page/5/`,
   ]);
 
-  await contextMongoDb.contextCollection
-    .updateOne(query, dropPages)
-    .then((result) => {
-      const { matchedCount, modifiedCount } = result;
-      if (matchedCount && modifiedCount) {
-        console.log(`successfully dropped pages`);
-      }
-    })
-    .then(async () => {
-      const scrapedPages = await scrapeSitePages(targetUrlSubPageCollection);
+  let scrapedPages;
+  let scrapeTargetSiteError;
 
-      await populateScrapedPagesInDb(siteId, scrapedPages);
-    })
-    .catch((err) => console.error(`failed to droped pages: ${err}`));
+  try {
+    scrapedPages = await scrapeSitePages(targetUrlSubPageCollection);
+  } catch (error) {
+    scrapeTargetSiteError = error;
+  }
+  return new Promise((resolve, reject) => {
+    if (scrapedPages) {
+      resolve(scrapedPages);
+    } else if (scrapeTargetSiteError) {
+      reject(scrapeTargetSiteError);
+    } else {
+      reject(new Error(`error on sraping target site`));
+    }
+  });
 };

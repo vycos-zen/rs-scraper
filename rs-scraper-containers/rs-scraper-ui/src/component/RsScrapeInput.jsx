@@ -1,12 +1,20 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Button, Container, Form, InputGroup } from "react-bootstrap";
+import {
+  Button,
+  Container,
+  Form,
+  FormControl,
+  InputGroup,
+  Row,
+  Col,
+} from "react-bootstrap";
 
 export function RsScrapeInput({ props }) {
-  const [numberOfPagesToQuery, setNumberOfPagesToQuery] = useState(0);
+  const [numberOfPagesToQuery, setNumberOfPagesToQuery] = useState(1);
 
-  const [maxPageCount, setMaxPageCount] = useState(0);
+  const [cacheScrapedResults, setCasheScrapedResults] = useState(true);
 
-  const [isValid, setIsValid] = useState(false);
+  const [isValid, setIsValid] = useState(true);
 
   const [wasValidated, setWasValidated] = useState(false);
 
@@ -17,24 +25,18 @@ export function RsScrapeInput({ props }) {
   const clearButtonRef = useRef();
 
   useEffect(() => {
-    const getMaxPageCount = () => {
-      return 5;
-    };
-    setMaxPageCount(getMaxPageCount());
-  }, [maxPageCount]);
-
-  useEffect(() => {
     const isValidInput = () => {
-      return (
+      return true;
+      /* return (
         numberOfPagesToQuery &&
         numberOfPagesToQuery > 0 &&
-        maxPageCount > 0 &&
-        numberOfPagesToQuery <= maxPageCount
-      );
+        props.maxPageCount > 0 &&
+        numberOfPagesToQuery <= props.maxPageCount
+      ); */
     };
 
     setIsValid(isValidInput());
-  }, [numberOfPagesToQuery, maxPageCount]);
+  }, [numberOfPagesToQuery]);
 
   useEffect(() => {
     setWasValidated(isValid);
@@ -43,60 +45,80 @@ export function RsScrapeInput({ props }) {
   const scrapePages = () => {
     scrapeButtonRef.current.blur();
     if (isValid) {
-      props.setNumberOfPages(numberOfPagesToQuery);
+      props.onSubmitRequest({
+        numberOfPages: numberOfPagesToQuery,
+        persistToCache: cacheScrapedResults,
+      });
     }
   };
 
   const clearQuery = () => {
     clearButtonRef.current.blur();
-    setNumberOfPagesToQuery(0);
+    setNumberOfPagesToQuery(1);
     props.clearResults();
-    props.setNumberOfPages(0);
+  };
+
+  const handleSetCache = (e) => {
+    setCasheScrapedResults(e.target.checked);
   };
 
   return (
     <Container>
-      <Form noValidate validated={wasValidated}>
-        <Form.Group className="mb-3" controlId="validation01">
-          <Form.Label>
-            Please specify the number of pages to scrape from 1-
-            {maxPageCount}:
-          </Form.Label>
-          <InputGroup className="mb-3">
-            <InputGroup.Text># of pages</InputGroup.Text>
-            <Form.Control
-              name="numberOfPages"
-              ref={numberOfPagesRef}
-              type="number"
-              value={numberOfPagesToQuery}
-              onChange={(e) => setNumberOfPagesToQuery(e.target.value)}
-              onBlur={(e) => setNumberOfPagesToQuery(e.target.value)}
-              placeholder="0"
-              required={true}
-            />
-          </InputGroup>
-          <Form.Control.Feedback type="invalid">
-            Expecting a number between 1 - {maxPageCount}
-          </Form.Control.Feedback>
-        </Form.Group>
-        <Button
-          name="scrapeButton"
-          ref={scrapeButtonRef}
-          type="button"
-          variant="primary"
-          disabled={!isValid}
-          onClick={scrapePages}
-        >
-          Scrape
-        </Button>{" "}
-        <Button
-          name="clearButton"
-          ref={clearButtonRef}
-          variant="secondary"
-          onClick={clearQuery}
-        >
-          Clear
-        </Button>
+      <Form validated={wasValidated}>
+        <Container>
+          <Row className="justify-content-md-center">
+            <Col xs lg="6" style={{ padding: 0 }}>
+              <InputGroup
+                className={isValid ? "mb-3 isValid" : "mb-3 isInvalid"}
+              >
+                <InputGroup.Text>
+                  # of pages{" "}
+                  {props.maxPageCount ? `(1 - ${props.maxPageCount})` : `n/a`}
+                </InputGroup.Text>
+                <FormControl
+                  name="numberOfPages"
+                  ref={numberOfPagesRef}
+                  type="number"
+                  value={numberOfPagesToQuery}
+                  onChange={(e) => setNumberOfPagesToQuery(e.target.value)}
+                  onBlur={(e) => setNumberOfPagesToQuery(e.target.value)}
+                  placeholder="0"
+                  required={true}
+                />
+                <FormControl.Feedback type="invalid">
+                  Expecting a number between 1 - {props.maxPageCount}
+                </FormControl.Feedback>
+              </InputGroup>
+            </Col>
+            <Col md="auto" style={{ padding: 0 }}>
+              <InputGroup>
+                <Button
+                  name="scrapeButton"
+                  ref={scrapeButtonRef}
+                  type="button"
+                  variant="primary"
+                  disabled={!isValid}
+                  onClick={scrapePages}
+                >
+                  Scrape
+                </Button>{" "}
+                <Button
+                  name="clearButton"
+                  ref={clearButtonRef}
+                  variant="secondary"
+                  onClick={clearQuery}
+                >
+                  Clear
+                </Button>
+                <InputGroup.Text>{`cache results`} </InputGroup.Text>
+                <InputGroup.Checkbox
+                  checked={cacheScrapedResults}
+                  onChange={handleSetCache}
+                />
+              </InputGroup>
+            </Col>
+          </Row>
+        </Container>
       </Form>
     </Container>
   );

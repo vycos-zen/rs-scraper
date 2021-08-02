@@ -1,5 +1,5 @@
 import React from "react";
-import { Container, ListGroup, Card, Button } from "react-bootstrap";
+import { ListGroup, Card, Button } from "react-bootstrap";
 
 export function RsScrapeResults({ props }) {
   const articleItem = (articleData) => (
@@ -33,10 +33,11 @@ export function RsScrapeResults({ props }) {
   return (
     <>
       <ListGroup>
-        {props.scrapeResults.scrapedPages &&
-          props.scrapeResults.scrapedPages.map((scrapeResult) =>
-            articleList(scrapeResult)
-          )}
+        {props.scrapeResults ||
+          (props.scrapeResults.scrapedPages &&
+            props.scrapeResults.scrapedPages.map((scrapeResult) =>
+              articleList(scrapeResult)
+            ))}
       </ListGroup>
     </>
   );

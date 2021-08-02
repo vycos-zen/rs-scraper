@@ -12,7 +12,7 @@ export const typeDefs = gql`
   input ScrapedSiteInput {
     _id: ID
     targetUrl: String
-    reScrape: Boolean
+    persistToCache: Boolean
     numberOfPages: Int
   }
 
@@ -31,10 +31,15 @@ export const typeDefs = gql`
     description: String
   }
 
+  input NumberOfAvailablePagesInput {
+    _id: ID
+    targetUrl: String
+  }
+
   type Query {
     hello: String
     targetUrl(siteId: ID): String
-    getNumberOfAvailablePages(siteId: ID!): Int
+    getNumberOfAvailablePages(input: NumberOfAvailablePagesInput!): Int
   }
 
   type Mutation {
