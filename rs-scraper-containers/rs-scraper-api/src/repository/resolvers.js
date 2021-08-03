@@ -1,7 +1,6 @@
 import {
   dropCache,
   scrapeTargetSite,
-  disconnectFromMongoDb,
   getOrCreateScrapedSiteInDb,
   getNumberOfAvailablePagesInDb,
 } from "./dal.js";
@@ -45,43 +44,33 @@ export const resolvers = {
       console.log(
         `getOrCreate with id: ${input._id}, targetUrl: ${input.targetUrl}`
       );
-      if (input.persistToCache) {
-        getOrCreateScrapedSiteInDb(
-          input._id,
-          input.targetUrl,
-          input.numberOfPages
-        )
-          .then((scrapedSite) => {
-            const site = scrapedSite;
-            console.log(`scraped site mutation with persist: ${scrapedSite}`);
-            return site;
-          })
-          .catch((error) => {
-            console.error(
-              `error on getOrCreateScrapedSiteInDb: ${error.message}`
-            );
-          });
-      } else {
-        //dropCache();
-        scrapeTargetSite(targetUrl)
-          .then((scrapedPages) => {
-            const filteredPages = scrapedPages.filter(
-              (p) => p.pageNumber <= numberOfPages
-            );
+      try {
+        if (input.persistToCache) {
+          const site = await getOrCreateScrapedSiteInDb(
+            input._id,
+            input.targetUrl,
+            input.numberOfPages
+          );
+          console.log(`scraped site mutation with persist: ${site}`);
+          return site;
+        } else {
+          await dropCache(input._id, input.targetUrl);
+          const scrapedPages = await scrapeTargetSite(input.targetUrl);
+          const filteredPages = scrapedPages.filter(
+            (p) => p.pageNumber <= input.numberOfPages
+          );
 
-            const scrapedSite = {
-              targetUrl: input.targetUrl,
-              hitCount: 1,
-              pageCount: filteredPages.length,
-              scrapedPages: filteredPages.data,
-            };
+          const scrapedSite = {
+            targetUrl: input.targetUrl,
+            hitCount: 1,
+            pageCount: filteredPages.length,
+            scrapedPages: filteredPages,
+          };
 
-            return scrapedSite;
-          })
-          .catch((error) => {
-            console.log(`error on scrapeTargetSite: ${error.message}`);
-            return null;
-          });
+          return scrapedSite;
+        }
+      } catch (error) {
+        console.error(`error on getOrCreateScrapedSiteInDb: ${error.message}`);
       }
     },
   },

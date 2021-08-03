@@ -12,8 +12,6 @@ import {
 export function RsScrapeInput({ props }) {
   const [numberOfPagesToQuery, setNumberOfPagesToQuery] = useState(1);
 
-  const [cacheScrapedResults, setCasheScrapedResults] = useState(true);
-
   const [isValid, setIsValid] = useState(true);
 
   const [wasValidated, setWasValidated] = useState(false);
@@ -47,7 +45,7 @@ export function RsScrapeInput({ props }) {
     if (isValid) {
       props.onSubmitRequest({
         numberOfPages: numberOfPagesToQuery,
-        persistToCache: cacheScrapedResults,
+        persistToCache: props.persistToCache,
       });
     }
   };
@@ -59,7 +57,7 @@ export function RsScrapeInput({ props }) {
   };
 
   const handleSetCache = (e) => {
-    setCasheScrapedResults(e.target.checked);
+    props.setPersistToCache(e.target.checked);
   };
 
   return (
@@ -112,7 +110,7 @@ export function RsScrapeInput({ props }) {
                 </Button>
                 <InputGroup.Text>{`cache results`} </InputGroup.Text>
                 <InputGroup.Checkbox
-                  checked={cacheScrapedResults}
+                  checked={props.persistToCache}
                   onChange={handleSetCache}
                 />
               </InputGroup>

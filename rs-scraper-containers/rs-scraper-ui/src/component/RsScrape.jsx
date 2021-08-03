@@ -11,11 +11,10 @@ import { Container } from "react-bootstrap";
 export function RsScrape() {
   const targetUrl = "https://blog.risingstack.com";
   const [siteId, setSiteId] = useState("");
-  const [persistToCache, setPersistToCache] = useState(false);
+  const [persistToCache, setPersistToCache] = useState(true);
   const [scrapedSite, setScrapedSite] = useState({});
   const [scrapedPages, setScrapedPages] = useState([]);
-
-  const [numberOfAvailablePages, setNumberOfAvailablePages] = useState(0);
+  const [maxPageCount, setMaxPageCount] = useState(0);
 
   const numberOfAvailablePagesData = useQuery(getNumberOfAvailablePagesQuery, {
     variables: { input: { _id: siteId, targetUrl: targetUrl } },
@@ -41,16 +40,9 @@ export function RsScrape() {
             console.log(
               `error in getAvailablePages -> getOrCreateScrapedSite: ${error.message}`
             );
-            /* console.log(
-                `getOrCreateScrapedSite mutation: ${JSON.stringify(
-                  result.data
-                )}` 
-              );*/
-
-            setSiteId(site._id);
-            setNumberOfAvailablePages(site.pageCount);
-            setScrapedPages(site.scrapedPages);
           });
+
+          setScrapedPages(site.scrapedPages);
         } else {
           console.log(`site id query, id: ${siteId}`);
           if (siteId) {
@@ -64,7 +56,11 @@ export function RsScrape() {
     getNumberOfAvailablePages();
   }, []);
 
-  useEffect(() => {}, [getOrCreateScrapedSite]);
+  useEffect(() => {
+    setSiteId(scrapedSite._id);
+    setScrapedPages(scrapedSite.scrapedPages);
+    setMaxPageCount(scrapedSite.pageCount);
+  }, [scrapedSite]);
 
   const clearResults = () => {
     setScrapedSite({});
@@ -72,30 +68,20 @@ export function RsScrape() {
 
   const onSubmitRequest = async (request) => {
     try {
-      await getOrCreateScrapedSite({
+      const site = await getOrCreateScrapedSite({
         variables: {
           input: {
             targetUrl: request.targetUrl,
-            persistToCache: request.persistToCache,
+            persistToCache: persistToCache,
             numberOfPages: Number.parseInt(request.numberOfPages),
           },
         },
-      }).then((result) => {
-        console.log(
-          `onSubmitRequest -> getOrCreateScrapedSite -> result:${JSON.stringify(
-            result
-          )}`
-        );
-        setScrapedSite(result.data.getOrCreateScrapedSite);
-        setSiteId(scrapedSite._id);
       });
-
-      if (scrapedSite) {
-      } else {
-        console.log(`no data received`);
+      if (site) {
+        setScrapedSite(site);
       }
     } catch (error) {
-      console.log(`error in refreshResults: ${error.message}`);
+      console.log(`error in refreshResults: ${error}`);
     }
   };
 
@@ -103,19 +89,17 @@ export function RsScrape() {
     <Container>
       <span>
         number of available pages:{" "}
-        {`rs-scraper numberOfAvailablePagesData: ${console.log(
-          numberOfAvailablePagesData.data
-        )}`}
         {numberOfAvailablePagesData.data &&
-          numberOfAvailablePagesData.data.getNumberOfAvailablePages}{" "}
-        {persistToCache ? `cashe enabled` : `cache disabled`}
+          numberOfAvailablePagesData.data.pageCount}{" "}
+        {persistToCache ? `cache enabled` : `cache disabled`}
       </span>
       <RsScrapeInput
         props={{
+          maxPageCount: maxPageCount,
+          persistToCache: persistToCache,
           setPersistToCache: setPersistToCache,
           clearResults: clearResults,
           onSubmitRequest: onSubmitRequest,
-          maxPageCount: numberOfAvailablePages,
         }}
       />
       <br />
