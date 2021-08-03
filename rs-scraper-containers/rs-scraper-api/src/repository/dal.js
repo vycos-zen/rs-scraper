@@ -46,13 +46,6 @@ const getDb = () => {
   }
 };
 
-/* export const disconnectFromMongoDb = () => {
-  if (!contextDataSource.db) {
-    return;
-  }
-  contextDataSource.mongoose.disconnect();
-}; */
-
 const locateSite = async (siteId, targetUrl) => {
   let contextSiteDocument;
   let locateSiteError;
@@ -80,6 +73,7 @@ const locateSite = async (siteId, targetUrl) => {
   return new Promise((resolve, reject) => {
     if (contextSiteDocument) {
       resolve(contextSiteDocument);
+      dataStore.db.mongoose.disconnect();
     } else if (locateSiteError) {
       reject(locateSiteError);
     } else {
@@ -110,6 +104,7 @@ const incrementHitCount = async (siteId) => {
           console.log(`incremented hitCount`);
         }
       });
+    //dataStore.db.mongoose.disconnect();
   } catch (err) {
     console.error(`error incrementing hitCount: ${err}`);
   }
@@ -165,7 +160,7 @@ export const getOrCreateScrapedSiteInDb = async (
     );
 
     console.log(
-      `returning site: ${contextSite._id}, hitcount ${contextSite.hitCount}, persisted pages count: ${contextSite.scrapedPages.length} / requested: ${numberOfPages} / returning: ${contextSite.scrapedPages.length}`
+      `returning site: ${contextSite._id}, hitcount ${contextSite.hitCount}, persisted pages count: ${contextSite.pageCount} / requested: ${numberOfPages} / returning: ${contextSite.scrapedPages.length}`
     );
 
     return contextSite;

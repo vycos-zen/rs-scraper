@@ -13,7 +13,6 @@ export function RsScrape() {
   const [siteId, setSiteId] = useState("");
   const [persistToCache, setPersistToCache] = useState(true);
   const [scrapedSite, setScrapedSite] = useState({});
-  const [scrapedPages, setScrapedPages] = useState([]);
   const [maxPageCount, setMaxPageCount] = useState(0);
 
   const numberOfAvailablePagesData = useQuery(getNumberOfAvailablePagesQuery, {
@@ -24,89 +23,74 @@ export function RsScrape() {
     getOrCreateScrapedSiteQuery
   );
 
+  /*   useEffect(() => {
+    if (scrapedSite._id && scrapedSite.scrapedPages) {
+      setSiteId(scrapedSite._id);
+    }
+  }, [scrapedSite, siteId]);
+ */
   useEffect(() => {
-    const getNumberOfAvailablePages = async () => {
-      try {
-        if (!siteId) {
-          console.log(`targetUrl: ${targetUrl}`);
-          const site = await getOrCreateScrapedSite({
-            variables: {
-              input: {
-                targetUrl: targetUrl,
-                persistToCache: persistToCache,
-              },
-            },
-          }).catch((error) => {
-            console.log(
-              `error in getAvailablePages -> getOrCreateScrapedSite: ${error.message}`
-            );
-          });
-
-          setScrapedPages(site.scrapedPages);
-        } else {
-          console.log(`site id query, id: ${siteId}`);
-          if (siteId) {
-          }
-        }
-      } catch (error) {
-        console.log(`error in getAvailablePages: ${error.message}`);
-      }
-    };
-
-    getNumberOfAvailablePages();
-  }, []);
-
-  useEffect(() => {
-    setSiteId(scrapedSite._id);
-    setScrapedPages(scrapedSite.scrapedPages);
-    setMaxPageCount(scrapedSite.pageCount);
-  }, [scrapedSite]);
+    if (!numberOfAvailablePagesData.loading && numberOfAvailablePagesData)
+      setMaxPageCount(
+        numberOfAvailablePagesData.data.getNumberOfAvailablePages
+      );
+  }, [numberOfAvailablePagesData]);
 
   const clearResults = () => {
     setScrapedSite({});
+    console.log(`clearResults ${JSON.stringify(scrapedSite)}`);
   };
 
-  const onSubmitRequest = async (request) => {
+  useEffect(() => {
+    if (
+      !getOrCreateScrapedSiteData.loading &&
+      getOrCreateScrapedSiteData.data
+    ) {
+      setScrapedSite(getOrCreateScrapedSiteData.data.getOrCreateScrapedSite);
+      setSiteId(getOrCreateScrapedSiteData.data.getOrCreateScrapedSite._id);
+    }
+  }, [getOrCreateScrapedSiteData, getOrCreateScrapedSiteData.loading]);
+
+  const submitRequest = async (request) => {
     try {
-      const site = await getOrCreateScrapedSite({
+      await getOrCreateScrapedSite({
         variables: {
           input: {
-            targetUrl: request.targetUrl,
+            _id: siteId,
+            targetUrl: targetUrl,
             persistToCache: persistToCache,
             numberOfPages: Number.parseInt(request.numberOfPages),
           },
         },
       });
-      if (site) {
-        setScrapedSite(site);
-      }
     } catch (error) {
-      console.log(`error in refreshResults: ${error}`);
+      console.log(`error in submitRequest: ${error}`);
     }
   };
 
   return (
     <Container>
-      <span>
-        number of available pages:{" "}
-        {numberOfAvailablePagesData.data &&
-          numberOfAvailablePagesData.data.pageCount}{" "}
-        {persistToCache ? `cache enabled` : `cache disabled`}
-      </span>
+      <span>welcome to rs-scrape. (target url: {targetUrl})</span>
       <RsScrapeInput
         props={{
           maxPageCount: maxPageCount,
           persistToCache: persistToCache,
           setPersistToCache: setPersistToCache,
           clearResults: clearResults,
-          onSubmitRequest: onSubmitRequest,
+          onSubmitRequest: submitRequest,
         }}
       />
       <br />
       {getOrCreateScrapedSiteData.loading ? (
         <span> loading... </span>
       ) : (
-        <RsScrapeResults props={{ scrapeResults: scrapedPages }} />
+        <RsScrapeResults
+          props={{
+            scrapedPages: scrapedSite.scrapedPages
+              ? scrapedSite.scrapedPages
+              : [],
+          }}
+        />
       )}
     </Container>
   );

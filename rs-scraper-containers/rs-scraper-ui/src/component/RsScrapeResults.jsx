@@ -33,11 +33,9 @@ export function RsScrapeResults({ props }) {
   return (
     <>
       <ListGroup>
-        {props.scrapeResults &&
-          props.scrapeResults.scrapedPages &&
-          props.scrapeResults.scrapedPages.map((scrapeResult) =>
-            articleList(scrapeResult)
-          )}
+        {props.scrapedPages && props.scrapedPages.length > 0
+          ? props.scrapedPages.map((scrapeResult) => articleList(scrapeResult))
+          : null}
       </ListGroup>
     </>
   );
