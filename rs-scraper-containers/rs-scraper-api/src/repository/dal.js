@@ -232,21 +232,16 @@ export const scrapeTargetSite = async (targetUrl) => {
     `${targetUrl}/page/5/`,
   ]);
 
-  let scrapedPages;
-  let scrapeTargetSiteError;
-
   try {
-    scrapedPages = await scrapeSitePages(targetUrlSubPageCollection);
+    const scrapedPages = await scrapeSitePages(targetUrlSubPageCollection);
+    return new Promise((resolve, reject) => {
+      if (scrapedPages) {
+        resolve(scrapedPages);
+      }
+    });
   } catch (error) {
-    scrapeTargetSiteError = error;
+    return new Promise((resolve, reject) => {
+      reject(error);
+    });
   }
-  return new Promise((resolve, reject) => {
-    if (scrapedPages) {
-      resolve(scrapedPages);
-    } else if (scrapeTargetSiteError) {
-      reject(scrapeTargetSiteError);
-    } else {
-      reject(new Error(`error on sraping target site`));
-    }
-  });
 };

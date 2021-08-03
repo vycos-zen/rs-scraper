@@ -10,30 +10,15 @@ export const resolvers = {
     hello: () => "helloo",
     targetUrl: async (_, { siteId }) => {
       return "unavailable";
-      /*       const db = await mongoDb();
-      let scrapedSiteTargetUrlWithId = await db
-        .collection(collectionName)
-        .findOne({
-          _id: input._id,
-        });
-
-      return scrapedSiteTargetUrlWithId
-        ? scrapedSiteTargetUrlWithId
-        : "Site does not exists."; */
     },
     getNumberOfAvailablePages: async (_, { input }) => {
       try {
-        console.log(
-          `getNumberOfAvailablePages input: { siteId: ${input._id}, targetUrl: ${input.targetUrl} }`
-        );
         const numberOfAvailablePages = await getNumberOfAvailablePagesInDb(
           input._id,
           input.targetUrl
         );
-        if (numberOfAvailablePages) {
-          console.log(`number of available pages: ${numberOfAvailablePages}`);
-          return numberOfAvailablePages;
-        }
+
+        return numberOfAvailablePages ? numberOfAvailablePages : 0;
       } catch (error) {
         console.error(`error on getNumberOfAvailablePages: ${error.message}`);
       }
@@ -45,29 +30,25 @@ export const resolvers = {
         `getOrCreate with id: ${input._id}, targetUrl: ${input.targetUrl}`
       );
       try {
+        const site = await getOrCreateScrapedSiteInDb(
+          input._id,
+          input.targetUrl,
+          input.numberOfPages
+        );
         if (input.persistToCache) {
-          const site = await getOrCreateScrapedSiteInDb(
-            input._id,
-            input.targetUrl,
-            input.numberOfPages
-          );
           console.log(`scraped site mutation with persist: ${site}`);
           return site;
         } else {
           await dropCache(input._id, input.targetUrl);
+
           const scrapedPages = await scrapeTargetSite(input.targetUrl);
           const filteredPages = scrapedPages.filter(
             (p) => p.pageNumber <= input.numberOfPages
           );
+          site.pageCount = filteredPages.length;
+          site.scrapedPages = filteredPages;
 
-          const scrapedSite = {
-            targetUrl: input.targetUrl,
-            hitCount: 1,
-            pageCount: filteredPages.length,
-            scrapedPages: filteredPages,
-          };
-
-          return scrapedSite;
+          return site;
         }
       } catch (error) {
         console.error(`error on getOrCreateScrapedSiteInDb: ${error.message}`);

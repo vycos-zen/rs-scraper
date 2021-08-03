@@ -53,30 +53,22 @@ const getScrapedPageData = async (url) => {
 
 export const scrapeSitePages = async (targetUrlSubPageCollection) => {
   console.log(`scraping: ${JSON.stringify(targetUrlSubPageCollection)}`);
-  const pages = [];
-  let scrapePageError;
 
   try {
+    const pages = [];
     for (let index = 0; index < targetUrlSubPageCollection.length; index++) {
       const page = await getScrapedPageData(targetUrlSubPageCollection[index]);
       page.pageNumber = index + 1;
       pages.push(page);
     }
+    return new Promise((resolve, reject) => {
+      if (pages.length > 0) {
+        resolve(pages);
+      }
+    });
   } catch (error) {
-    scrapePageError = error;
-  }
-
-  return new Promise((resolve, reject) => {
-    if (pages) {
-      resolve(pages);
-    } else if (error) {
+    return new Promise((resolve, reject) => {
       reject(error);
-    } else {
-      reject(
-        new Error(
-          `invalid input for targetUrlSubPageCollection, got: ${targetUrlSubPageCollection}`
-        )
-      );
-    }
-  });
+    });
+  }
 };
