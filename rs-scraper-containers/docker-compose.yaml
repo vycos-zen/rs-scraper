@@ -4,21 +4,25 @@ services:
     image: mongo:4.4-focal
     container_name: rs-scraper-mongodb
     restart: always
+    ports:
+      - 27017:27017
     volumes:
       - rs-scraper-mongodb:/rs-scraper-mongodb/databaseVolume
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: rs-scraper
-
   mongo-express:
     image: mongo-express
-    container_name: rs-scraper-mongodb-express
+    container_name: rs-scraper-mongo-express
     restart: always
     ports:
       - 8081:8081
     environment:
+      ME_CONFIG_MONGODB_SERVER: rs-scraper-mongodb
       ME_CONFIG_MONGODB_ADMINUSERNAME: root
       ME_CONFIG_MONGODB_ADMINPASSWORD: rs-scraper
+    depends_on:
+      - rs-scraper-mongodb
   rs-scraper-api:
     build:
       context: ./rs-scraper-api/
@@ -35,9 +39,7 @@ services:
     image: peterkollerlv/rs-scraper-ui
     container_name: rs-scraper-ui
     restart: always
-    expose:
-      - "3000"
     ports:
-      - 3000:3000
+      - 3000:80
 volumes:
   rs-scraper-mongodb:

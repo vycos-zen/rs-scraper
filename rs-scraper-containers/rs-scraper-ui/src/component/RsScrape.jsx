@@ -23,14 +23,8 @@ export function RsScrape() {
     getOrCreateScrapedSiteQuery
   );
 
-  /*   useEffect(() => {
-    if (scrapedSite._id && scrapedSite.scrapedPages) {
-      setSiteId(scrapedSite._id);
-    }
-  }, [scrapedSite, siteId]);
- */
   useEffect(() => {
-    if (!numberOfAvailablePagesData.loading && numberOfAvailablePagesData)
+    if (!numberOfAvailablePagesData.loading && numberOfAvailablePagesData.data)
       setMaxPageCount(
         numberOfAvailablePagesData.data.getNumberOfAvailablePages
       );
