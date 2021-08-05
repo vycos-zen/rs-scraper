@@ -1,13 +1,12 @@
 {
   "name": "rs-scraper-containers",
   "version": "1.0.0",
-  "description": "",
+  "description": "app orchestration via docker compose",
   "main": "index.js",
   "scripts": {
     "start": "docker-compose up -d",
     "stop": "docker-compose down",
-    "build": "docker-compose build --compress --parallel",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "docker-compose build --compress --parallel"
   },
   "keywords": [],
   "author": "peterkollerlv",
