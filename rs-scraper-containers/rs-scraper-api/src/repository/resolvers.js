@@ -1,3 +1,4 @@
+import { nanoid } from "nanoid";
 import {
   dropCache,
   scrapeTargetSite,
@@ -21,6 +22,7 @@ export const resolvers = {
         return numberOfAvailablePages ? numberOfAvailablePages : 0;
       } catch (error) {
         console.error(`error on getNumberOfAvailablePages: ${error.message}`);
+        return 0;
       }
     },
   },
@@ -29,29 +31,53 @@ export const resolvers = {
       console.log(
         `getOrCreate with id: ${input._id}, targetUrl: ${input.targetUrl}`
       );
-      try {
-        const site = await getOrCreateScrapedSiteInDb(
-          input._id,
-          input.targetUrl,
-          input.numberOfPages
-        );
-        if (input.persistToCache) {
-          console.log(`scraped site mutation with persist: ${site}`);
-          return site;
-        } else {
-          await dropCache(input._id, input.targetUrl);
-
-          const scrapedPages = await scrapeTargetSite(input.targetUrl);
-          const filteredPages = scrapedPages.filter(
-            (p) => p.pageNumber <= input.numberOfPages
+      const getSiteIfExists = async () => {
+        try {
+          const siteInDb = await getOrCreateScrapedSiteInDb(
+            input._id,
+            input.targetUrl,
+            input.numberOfPages
           );
-          site.pageCount = filteredPages.length;
-          site.scrapedPages = filteredPages;
 
-          return site;
+          if (!siteInDb) {
+            return null;
+          }
+
+          if (input.persistToCache) {
+            console.log(`scraped site mutation with persist: ${siteInDb}`);
+            return siteInDb;
+          } else {
+            await dropCache(input._id, input.targetUrl);
+
+            return siteInDb;
+          }
+        } catch (error) {
+          console.error(
+            `error on getOrCreateScrapedSiteInDb: ${error.message}`
+          );
         }
+      };
+
+      try {
+        const scrapedPages = await scrapeTargetSite(input.targetUrl);
+        const filteredPages = scrapedPages.filter(
+          (p) => p.pageNumber <= input.numberOfPages
+        );
+
+        let site = await getSiteIfExists();
+        if (!site) {
+          site = {
+            _id: nanoid(),
+            targetUrl: input.targetUrl,
+            hitCount: 1,
+          };
+        }
+        site.pageCount = filteredPages.length;
+        site.scrapedPages = filteredPages;
+
+        return site;
       } catch (error) {
-        console.error(`error on getOrCreateScrapedSiteInDb: ${error.message}`);
+        console.error(`error on scrapeTargetSite: ${error.message}`);
       }
     },
   },

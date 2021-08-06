@@ -38,7 +38,8 @@ export function RsScrape() {
   useEffect(() => {
     if (
       !getOrCreateScrapedSiteData.loading &&
-      getOrCreateScrapedSiteData.data
+      getOrCreateScrapedSiteData.data &&
+      getOrCreateScrapedSiteData.data.getOrCreateScrapedSite
     ) {
       setScrapedSite(getOrCreateScrapedSiteData.data.getOrCreateScrapedSite);
       setSiteId(getOrCreateScrapedSiteData.data.getOrCreateScrapedSite._id);

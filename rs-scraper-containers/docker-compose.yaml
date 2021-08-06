@@ -1,16 +1,18 @@
 version: "3.8"
 services:
   rs-scraper-mongodb:
-    image: mongo:4.4-focal
+    image: mongo:5
     container_name: rs-scraper-mongodb
     restart: always
+    expose:
+      - "27017"
     ports:
       - 27017:27017
     volumes:
       - rs-scraper-mongodb:/rs-scraper-mongodb/databaseVolume
     environment:
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: rs-scraper
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USR}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_SECRET}
   mongo-express:
     image: mongo-express
     container_name: rs-scraper-mongo-express
@@ -19,8 +21,8 @@ services:
       - 8081:8081
     environment:
       ME_CONFIG_MONGODB_SERVER: rs-scraper-mongodb
-      ME_CONFIG_MONGODB_ADMINUSERNAME: root
-      ME_CONFIG_MONGODB_ADMINPASSWORD: rs-scraper
+      ME_CONFIG_MONGODB_ADMINUSERNAME: ${MONGO_USR}
+      ME_CONFIG_MONGODB_ADMINPASSWORD: ${MONGO_SECRET}
     depends_on:
       - rs-scraper-mongodb
   rs-scraper-api:
@@ -32,14 +34,32 @@ services:
     expose:
       - "4242"
     ports:
-      - "4242:4242"
+      - "${API_PORT}:4242"
+    environment:
+      - NODE_ENV=${API_NODE_ENV}
+      - HELLO=${HELLO}
+      - API_DOMAIN=${API_DOMAIN}
+      - API_PORT=${API_PORT}
+      - MONGO_SERVER=${MONGO_SERVER}
+      - MONGO_DOMAIN=${MONGO_DOMAIN}
+      - MONGO_PORT=${MONGO_PORT}
+      - MONGO_ENV=${MONGO_ENV}
+      - MONGO_USR=${MONGO_USR}
+      - MONGO_SECRET=${MONGO_SECRET}
+      - MONGO_DB=${MONGO_DB}
   rs-scraper-ui:
     build:
       context: ./rs-scraper-ui/
+      args:
+        REACT_APP_API_URL: ${REACT_APP_API_URL}
     image: peterkollerlv/rs-scraper-ui
     container_name: rs-scraper-ui
     restart: always
+    expose:
+      - "5000"
     ports:
-      - 3000:80
+      - ${UI_PORT}:5000
+    environment:
+      - NODE_ENV=${UI_NODE_ENV}
 volumes:
   rs-scraper-mongodb:

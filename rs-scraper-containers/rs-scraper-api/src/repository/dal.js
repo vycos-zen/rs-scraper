@@ -18,8 +18,8 @@ const getDb = () => {
   const uri = config.mongoServer.includes("+srv")
     ? `${config.mongoServer}${config.mongoUsr}:${config.mongoSecret}@${config.cluster}${config.domain}/${config.mongoDb}?retryWrites=true&w=majority`
     : `
-  ${config.mongoServer}${config.mongoEnv}:${config.mongoDbPort}/${config.mongoDb}`;
-
+  ${config.mongoServer}${config.mongoUsr}:${config.mongoSecret}@${config.domain}:${config.mongoDbPort}/${config.mongoDb}`;
+  console.log(`DEV: uri: ${uri}`);
   console.log(`connecting to mongodb environment: ${config.mongoEnv}`);
 
   try {
@@ -166,7 +166,7 @@ export const getOrCreateScrapedSiteInDb = async (
     return contextSite;
   } catch (e) {
     console.log(`error - getOrCreateScrapedSite: ${e.message}`);
-    return e.message;
+    return null;
   }
 };
 

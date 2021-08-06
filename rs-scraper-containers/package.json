@@ -6,7 +6,9 @@
   "scripts": {
     "start": "docker-compose up -d",
     "stop": "docker-compose down",
-    "build": "docker-compose build --compress --parallel"
+    "build": "docker-compose build --compress --parallel",
+    "rr": "npm stop && npm run build && npm start",
+    "rebuild": "docker-compose build --no-cache --compress --parallel"
   },
   "keywords": [],
   "author": "peterkollerlv",
