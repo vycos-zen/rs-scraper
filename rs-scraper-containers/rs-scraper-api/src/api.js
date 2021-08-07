@@ -33,11 +33,7 @@ const service = startApolloServer(typeDefs, resolvers);
 service
   .then((service) => {
     console.log(
-      `url: ${
-        process.env.NODE_ENV === "development"
-          ? "localhost"
-          : process.env.API_DOMAIN
-      }:${service.port}${service.server.graphqlPath}`
+      `url: ${process.env.API_HOST}:${service.port}${service.server.graphqlPath}`
     );
   })
   .catch((error) => {

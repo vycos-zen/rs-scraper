@@ -12,7 +12,7 @@ const getDb = () => {
     mongoSecret: process.env.MONGO_SECRET,
     mongoDb: process.env.MONGO_DB,
     cluster: process.env.MONGO_CLUSTER,
-    domain: process.env.MONGO_DOMAIN,
+    domain: process.env.MONGO_HOST,
   };
 
   const uri = config.mongoServer.includes("+srv")
