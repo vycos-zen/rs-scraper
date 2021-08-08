@@ -12,11 +12,11 @@ const getDb = () => {
     mongoSecret: process.env.MONGO_SECRET,
     mongoDb: process.env.MONGO_DB,
     cluster: process.env.MONGO_CLUSTER,
-    domain: process.env.MONGO_HOST,
+    host: process.env.MONGO_HOST,
   };
 
   const uri = config.mongoServer.includes("+srv")
-    ? `${config.mongoServer}${config.mongoUsr}:${config.mongoSecret}@${config.cluster}${config.domain}/${config.mongoDb}?retryWrites=true&w=majority`
+    ? `${config.mongoServer}${config.mongoUsr}:${config.mongoSecret}@${config.cluster}${config.host}/${config.mongoDb}?retryWrites=true&w=majority`
     : `
   ${config.mongoServer}${config.mongoUsr}:${config.mongoSecret}@${config.domain}:${config.mongoDbPort}/${config.mongoDb}`;
   console.log(`DEV: uri: ${uri}`);
@@ -73,11 +73,10 @@ const locateSite = async (siteId, targetUrl) => {
   return new Promise((resolve, reject) => {
     if (contextSiteDocument) {
       resolve(contextSiteDocument);
-      dataStore.db.mongoose.disconnect();
     } else if (locateSiteError) {
       reject(locateSiteError);
     } else {
-      reject(new Error(`unable to locate site...`));
+      resolve(null);
     }
   });
 };
@@ -117,6 +116,10 @@ export const getNumberOfAvailablePagesInDb = async (siteId, targetUrl) => {
       return new Promise((resolve, reject) => {
         resolve(contextSite.pageCount);
       });
+    } else {
+      return new Promise((resolve, reject) => {
+        resolve(0);
+      });
     }
   } catch (error) {
     return new Promise((resolve, reject) => {
@@ -137,7 +140,7 @@ export const getOrCreateScrapedSiteInDb = async (
       if (!targetUrl) {
         throw new Error("targetUrl is mandatory when no id provided");
       }
-      const scrapedPages = scrapeTargetSite(targetUrl);
+      const scrapedPages = await scrapeTargetSite(targetUrl);
       contextSite = await ScrapedSite.create({
         targetUrl: targetUrl,
         hitCount: 1,
